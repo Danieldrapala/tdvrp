@@ -1,7 +1,14 @@
 # simulated annealing algorithm
-from numpy import exp
+from numpy import exp, asarray
 from numpy.random import rand, randn
 
+
+def objective(x):
+    return 0
+
+
+# define range for input
+bounds = asarray([[-5.0, 5.0]])
 
 def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
     # generate an initial point
