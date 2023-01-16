@@ -10,5 +10,5 @@ def single_fuel_consumption(i, j, Tdarray, Taarry, Warray, D, V, gphArray):
         Fk = Fk + (Warray[k+1] - max(Tdarray[i][j], Warray[k]) *gphArray[k][i][j])
         F = Fk + (Taarry[i][j] -  Warray[k+1]) * gphArray[k+1][i][j]
         k+=1
-    # T = Taarry[i][j] - Tdarray[i][j]
-    return F
+    T = Taarry[i][j] - Tdarray[i][j]
+    return {F,T}
