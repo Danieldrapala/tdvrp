@@ -4,6 +4,11 @@ from tkinter import ttk
 from tkinter import messagebox, filedialog
 import csv
 import os
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pandas as pd
+
 
 from simulated_annealing import Point, simulated_annealing
 
@@ -74,7 +79,11 @@ if __name__ == "__main__":
 
     mydata1 = []
     mydata2 = []
+    save_data = []
+    points_data = {}
 
+    def draw_graph():
+        pass
 
     def update_trv1(rows):
         global mydata1
@@ -204,8 +213,91 @@ if __name__ == "__main__":
         for record in trv2.get_children():
             trv2.delete(record)
 
+    def makeRetailStoriesList():
+        array = []
+        for i in mydata1:
+            array.append(Point((float(i[2]),float(i[3])),0,float(i[4]),i[1]))
+        return array
 
+
+    def takeVelocityAndIntervalArray():
+        V = []
+        W = []
+        for i in mydata2:
+            V.append(float(i[3]))
+            W.append(float(i[2]))
+        return V,W
+
+    def calc():
+        print(mydata1)
+        print(mydata2)
+        print(a1.get())
+        print(b1.get())
+        print(c1.get())
+        print(d1.get())
+        print(e1.get())
+        retailStories = makeRetailStoriesList()
+        print(retailStories)
+        V,W = takeVelocityAndIntervalArray()
+        print(V,W)
+        return simulated_annealing(int(num_ofIterationsInput.get()), float(tempstartInput.get()), float(tempendInput.get()), retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
+    
+
+    def export_results():
+        fln = filedialog.asksaveasfilename(initialdir=os.getcwd(), title="Save CSV",
+                                           filetypes=(("CSV File", "*.csv"), ("All Files", "*.*")))
+        with open(fln, 'w', newline='') as myfile:
+            exp_wrtier = csv.writer(myfile, delimiter=',')
+            exp_wrtier.writerow(save_data)
+
+        messagebox.showinfo("Data Exported",
+                            "Your data has been exported to " + os.path.basename(fln) + " successfully.")
+
+
+    def display_results():
+        result = calc()    
+
+        global save_data
+        save_data.append(result[1]) #Total time 
+        save_data.append(result[2]) #Fuel
+        save_data.append(result[5]) #Subtraks   
+        save_data.append(result[4]) #Start
+        save_data.append(result[3]) #End
+
+        global points_data
+        for point in result[0]:
+            points_data[point.s] = point 
+
+
+
+        result_window = Toplevel()
+        result_window.title("Results")
+
+        wrapper1 = LabelFrame(result_window, text="Results Data")
+        wrapper2 = LabelFrame(result_window, text="Graph")
+
+        wrapper1.grid(row=0, column=0, padx="5", columnspan=10, rowspan=10)
+        wrapper2.grid(row=0, column=11, padx="5", columnspan=10, rowspan=10)
+
+        total_time = Label(wrapper1, text=f"Total time: {result[1]}").grid(row=0, column=0, padx="5", pady="5")
+        fuel_consumption = Label(wrapper1, text=f"Total fuel consumption: {result[2]}").grid(row=1, column=0, padx="5", pady="5")
+        total_subtracks = Label(wrapper1, text=f"Total number of subtracks: {result[5]}").grid(row=2, column=0, padx="5", pady="5")
+        rbn = Label(wrapper1, text=f"Starting points: {result[4]}").grid(row=3, column=0, padx="5", pady="5")
+        ren = Label(wrapper1, text=f"Enpoints: {result[3]}").grid(row=4, column=0, padx="5", pady="5")
+
+        ren = Label(wrapper2, text=f"Enpoints: {result[3]}").grid(row=4, column=0, padx="5", pady="5")
+
+        extbtn = Button(result_window, text="Exit", width="10", command=result_window.destroy)
+        extbtn.grid(row=11, column=0, padx="5", pady="5", sticky="w")
+
+        save_btn = Button(master = result_window, text="Export Results", command=export_results)
+        save_btn.grid(row=11, column=1, padx="5", pady="5")
+
+
+    #MAIN WINDOW
     root = Tk()
+    
+
 
     wrapperSA = LabelFrame(root, text="SA Data")
     wrapper1 = LabelFrame(root, text="Initial Data")
@@ -239,12 +331,10 @@ if __name__ == "__main__":
     b = Label(wrapper1, text="MPG").grid(row=1, column=0, padx="5", pady="5")
     c = Label(wrapper1, text="Capacity").grid(row=2, column=0, padx="5", pady="5")
     d = Label(wrapper1, text="Pause").grid(row=3, column=0, padx="5", pady="5")
-    e = Label(wrapper1, text="First departure time").grid(row=4, column=0, padx="5",
-                                                          pady="5")  # godzina wyjazdu pierwszego
+    e = Label(wrapper1, text="First departure time").grid(row=4, column=0, padx="5", pady="5")  # godzina wyjazdu pierwszego
 
     a1 = Entry(wrapper1)
     a1.grid(row=0, column=1, padx="5", pady="5")
-
     b1 = Entry(wrapper1)
     b1.grid(row=1, column=1, padx="5", pady="5")
     c1 = Entry(wrapper1)
@@ -253,36 +343,6 @@ if __name__ == "__main__":
     d1.grid(row=3, column=1, padx="5", pady="5")
     e1 = Entry(wrapper1)
     e1.grid(row=4, column=1, padx="5", pady="5")
-
-
-    def makeRetailStoriesList():
-        array = []
-        for i in mydata1:
-            array.append(Point((float(i[2]),float(i[3])),0,float(i[4]),i[1]))
-        return array
-
-
-    def takeVelocityAndIntervalArray():
-        V = []
-        W = []
-        for i in mydata2:
-            V.append(float(i[3]))
-            W.append(float(i[2]))
-        return V,W
-
-    def calc():
-        print(mydata1)
-        print(mydata2)
-        print(a1.get())
-        print(b1.get())
-        print(c1.get())
-        print(d1.get())
-        print(e1.get())
-        retailStories = makeRetailStoriesList()
-        print(retailStories)
-        V,W = takeVelocityAndIntervalArray()
-        print(V,W)
-        return simulated_annealing(int(num_ofIterationsInput.get()), float(tempstartInput.get()), float(tempendInput.get()), retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
 
     # CUSTOMERS DATA LOOKUP
     trv1 = TreeviewEdit(wrapper2, columns=(1, 2, 3, 4, 5), show="headings", height="30")
@@ -381,7 +441,7 @@ if __name__ == "__main__":
     extbtn = Button(master=root, text="Exit", width="10", command=lambda: exit())
     extbtn.grid(row=4, column=0, padx="5", pady="5", sticky="w")
 
-    calcbtn = Button(master=root, text="Calculate solution", command=calc)
+    calcbtn = Button(master=root, text="Calculate solution", command=display_results)
     calcbtn.grid(row=2, column=0, padx="5", pady="5", sticky="w")
 
     root.title("MIS Project")

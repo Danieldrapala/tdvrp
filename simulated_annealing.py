@@ -15,7 +15,7 @@ class Point:
     self.name = name
 
   def __repr__(self):
-      return f"<Test cords:{self.cords} s:{self.s} q:{self.q} name: {self.name}"
+      return f"Point cords:{self.cords} s:{self.s} q:{self.q} name: {self.name}"
   def __str__(self):
       return str(self.cords) + str(self.s) + str(self.q)
 
