@@ -1,14 +1,24 @@
-def single_fuel_consumption(i, j, Tdarray, Taarry, Warray, D, V, gphArray):
-    k = 1
-    Fk= 0
-    while Tdarray[i][j] < Warray[k+1]:
-        k+=1
-    Taarry[i][j] = Tdarray[i][j] + D[i][j]/V[k][i][j]
-    F= gphArray[k][i][j] *  D[i][j]/V[k][i][j]
-    while Taarry[i][j] >= Warray[k+1]:
-        Taarry[i][j] = (Taarry[i][j] - Warray[k+1]) * V[k][i][j]/ V[k+1][i][j] + Warray[k+1]
-        Fk = Fk + (Warray[k+1] - max(Tdarray[i][j], Warray[k]) *gphArray[k][i][j])
-        F = Fk + (Taarry[i][j] -  Warray[k+1]) * gphArray[k+1][i][j]
-        k+=1
-    T = Taarry[i][j] - Tdarray[i][j]
-    return {F,T}
+import math
+
+
+def single_fuel_consumption(td, i, j, W, V, mpg):
+    k = 0
+    fk = 0
+    d = calculate_distance(i, j)
+    while td < W[k + 1]:
+        k += 1
+    ta = td + d / V[k]
+    f = gph(mpg,V[k]) * d / V[k]
+    while ta >= W[k+1]:
+        ta = (ta - W[k+1]) * V[k]/ V[k+1] + W[k+1]
+        fk = fk + (W[k+1] - max(td, W[k]) * gph(mpg, V[k]))
+        f = fk + (ta - W[k+1]) * gph(mpg, V[k+1])
+        k += 1
+    t = ta - td
+    return f, t
+
+def gph(mpg,v):
+    return v/mpg
+
+def calculate_distance(point1, point2):
+    return math.sqrt(pow(point2[0]- point1[0],2) + pow(point2[1]-point1[1],2))

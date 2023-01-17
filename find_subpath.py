@@ -1,15 +1,14 @@
-import allthedata
-def find_subpath( S, C ):
-    Rb=[]
-    Re=[]
+def find_subpath(S, C, qarray):
+    Rb = {}
+    Re = {}
     Rb[1] = 1
     Re[1] = 1
     s = 1
     n = 1
-    Q = allthedata.qarray[s]
+    Q = qarray[s].q
     N = 1
     while s < S:
-        Q = Q + allthedata.qarray[s+1]
+        Q = Q + qarray[s + 1].q
         if Q > C:
             Re[n] = s
             Q = 0
@@ -17,4 +16,4 @@ def find_subpath( S, C ):
             Rb[n] = s + 1
         s += 1
     Re[n] = s
-    return {Re, Rb, N}
+    return Re, Rb, N
