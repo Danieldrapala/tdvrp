@@ -55,10 +55,9 @@ def randomize_solution(curr):
     for s in curr:
         seqlist.append(s.s)
     min = np.argsort(seqlist)
-    sample = random.sample(range(1, len(curr)), 3)
+    sample = random.sample(range(1, len(curr)), 2)
     newArr[min[sample[0]-1]].s = sample[1]
-    newArr[min[sample[1]-1]].s = sample[2]
-    newArr[min[sample[2]-1]].s = sample[0]
+    newArr[min[sample[1]-1]].s = sample[0]
     return newArr
 
 def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mpg, Td):
@@ -97,7 +96,10 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
         # calculate temperature for current epoch
         temp = temp / float(temp * beta + 1)
         # calculate metropolis acceptance criterion
-        metropolis = math.exp(-diff / temp)
+        try:
+            metropolis = math.exp(-diff / temp)
+        except OverflowError:
+            metropolis = float('inf')
         # check if we should keep the new point
         if diff < 0 or rand() < metropolis:
             # store the new current point
