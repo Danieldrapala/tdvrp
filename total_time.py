@@ -1,6 +1,6 @@
 from single_fuel_consumption import single_fuel_consumption
 
-CENTRUM_POINT = (0,0)
+CENTRUM_POINT = (30,30)
 def total_time(ps, Re, N, W, V, mpg, qarray,td):
     tt=0
     s=1

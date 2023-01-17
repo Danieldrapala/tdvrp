@@ -40,7 +40,7 @@ def closest_node(node, nodes):
 
 def initial_solution(S, retailStories):
     array = retailStories
-    point = (0, 0)
+    point = (30, 30)
     s = 1
     while s <= S:
         closest_node_index = closest_node(point, retailStories)

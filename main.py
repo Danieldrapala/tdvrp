@@ -4,11 +4,10 @@ from tkinter import ttk
 from tkinter import messagebox, filedialog
 import csv
 import os
-import numpy as np
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import pandas as pd
-
+from matplotlib.figure import Figure
 
 from simulated_annealing import Point, simulated_annealing
 
@@ -81,6 +80,7 @@ if __name__ == "__main__":
     mydata2 = []
     save_data = []
     points_data = {}
+    results = []
 
     def draw_graph():
         pass
@@ -238,8 +238,9 @@ if __name__ == "__main__":
         print(e1.get())
         retailStories = makeRetailStoriesList()
         print(retailStories)
-        V,W = takeVelocityAndIntervalArray()
-        print(V,W)
+        V, W = takeVelocityAndIntervalArray()
+        print(V, W)
+        global results
         return simulated_annealing(int(num_ofIterationsInput.get()), float(tempstartInput.get()), float(tempendInput.get()), retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
     
 
@@ -254,38 +255,65 @@ if __name__ == "__main__":
                             "Your data has been exported to " + os.path.basename(fln) + " successfully.")
 
 
+
     def display_results():
-        result = calc()    
-
+        results = calc()
         global save_data
-        save_data.append(result[1]) #Total time 
-        save_data.append(result[2]) #Fuel
-        save_data.append(result[5]) #Subtraks   
-        save_data.append(result[4]) #Start
-        save_data.append(result[3]) #End
-
+        save_data.append(results[1]) #Total time
+        save_data.append(results[2]) #Fuel
+        save_data.append(results[5]) #Subtraks
+        save_data.append(results[4]) #Start
+        save_data.append(results[3]) #End
+        xs = []
+        ys = []
         global points_data
-        for point in result[0]:
-            points_data[point.s] = point 
+        for point in results[0]:
+            points_data[point.s] = point
+            xs.append(point.cords[0])
+            ys.append(point.cords[1])
 
 
 
         result_window = Toplevel()
+        result_window.geometry("1000x600")
         result_window.title("Results")
 
-        wrapper1 = LabelFrame(result_window, text="Results Data")
-        wrapper2 = LabelFrame(result_window, text="Graph")
+        results_wrapper = LabelFrame(result_window, text="Results Data")
+        canvaswrapper = Frame(result_window, width=400, height=400, bg='white')
+        def plot():
+            color = ['r','b','g','black']
+            fig = Figure(figsize=(6, 6))
+            a = fig.add_subplot(111)
+            a.plot(30, 30, c='r', marker='s')
+            a.scatter(xs, ys, c='b')
+            n=1
+            s=1
+            while n <= results[5]:
+                a.plot([30, points_data[s].cords[0]], [30, points_data[s].cords[1]], c=color[n])
+                while s != results[3][n]:
+                    a.plot([points_data[s].cords[0], points_data[s+1].cords[0]], [points_data[s].cords[1],points_data[s+1].cords[1]], c=color[n])
+                    s += 1
+                a.plot([points_data[s].cords[0], 30], [points_data[s].cords[1],30], c=color[n])
+                n+=1
+                s+=1
 
-        wrapper1.grid(row=0, column=0, padx="5", columnspan=10, rowspan=10)
-        wrapper2.grid(row=0, column=11, padx="5", columnspan=10, rowspan=10)
+            for i in results[0]:
+                a.annotate(f"({i.name}, {i.s})", xy=(i.cords[0], i.cords[1]))
 
-        total_time = Label(wrapper1, text=f"Total time: {result[1]}").grid(row=0, column=0, padx="5", pady="5")
-        fuel_consumption = Label(wrapper1, text=f"Total fuel consumption: {result[2]}").grid(row=1, column=0, padx="5", pady="5")
-        total_subtracks = Label(wrapper1, text=f"Total number of subtracks: {result[5]}").grid(row=2, column=0, padx="5", pady="5")
-        rbn = Label(wrapper1, text=f"Starting points: {result[4]}").grid(row=3, column=0, padx="5", pady="5")
-        ren = Label(wrapper1, text=f"Enpoints: {result[3]}").grid(row=4, column=0, padx="5", pady="5")
+            canvas = FigureCanvasTkAgg(fig, master=canvaswrapper)
+            canvas.get_tk_widget().grid(row=0, column=11, padx="5", columnspan=10, rowspan=10)
+            canvas.draw()
 
-        ren = Label(wrapper2, text=f"Enpoints: {result[3]}").grid(row=4, column=0, padx="5", pady="5")
+        results_wrapper.grid(row=0, column=0, padx="5", columnspan=10, rowspan=10)
+        canvaswrapper.grid(row=0, column=11, padx="5", columnspan=80, rowspan=80)
+
+        Label(results_wrapper, text=f"Total time: {results[1]}").grid(row=0, column=0, padx="5", pady="5")
+        Label(results_wrapper, text=f"Total fuel consumption: {results[2]}").grid(row=1, column=0, padx="5", pady="5")
+        Label(results_wrapper, text=f"Total number of subtracks: {results[5]}").grid(row=2, column=0, padx="5", pady="5")
+        Label(results_wrapper, text=f"Starting points: {results[4]}").grid(row=3, column=0, padx="5", pady="5")
+        Label(results_wrapper, text=f"Enpoints: {results[3]}").grid(row=4, column=0, padx="5", pady="5")
+
+        plot()
 
         extbtn = Button(result_window, text="Exit", width="10", command=result_window.destroy)
         extbtn.grid(row=11, column=0, padx="5", pady="5", sticky="w")

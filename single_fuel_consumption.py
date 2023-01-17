@@ -1,6 +1,5 @@
 import math
 
-
 def single_fuel_consumption(td, i, j, W, V, mpg):
     k = 0
     fk = 0
@@ -21,4 +20,4 @@ def gph(mpg,v):
     return v/mpg
 
 def calculate_distance(point1, point2):
-    return math.sqrt(pow(point2[0]- point1[0],2) + pow(point2[1]-point1[1],2))
+    return math.sqrt(pow(point2[0] - point1[0],2) + pow(point2[1]-point1[1],2))
