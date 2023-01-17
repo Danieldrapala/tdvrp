@@ -13,6 +13,7 @@ def find_subpath(S, C, qarray):
             Re[n] = s
             Q = 0
             N = n + 1
+            n = n + 1
             Rb[n] = s + 1
         s += 1
     Re[n] = s

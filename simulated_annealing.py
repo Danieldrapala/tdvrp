@@ -70,11 +70,10 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
     S = len(retailStories)
     beta = (tempstart - tempEnd) / ((A-1) * tempstart * tempEnd)
     temp = tempstart
-    print('beta and temp',  beta, temp)
+    # print('beta and temp',  beta, temp)
     # evaluate the initial point
     best_eval = allthedata.whole_process(p, C, S,  ps, qarray,  W, V, mpg, Td)
     # current working solution
-    print('TOTALFUEL', best_eval[1])
     count = 0
     curr, curr_eval = best, best_eval
     # run the algorithm
@@ -86,7 +85,6 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
             qarray[r.s] = r
         # evaluate candidate point
         candidate_eval = allthedata.whole_process(p, C, S,  ps, qarray,  W,V,mpg, Td)
-        print('TOTALFUEL',candidate_eval[1])
         # check for new best solution
         if candidate_eval[1] < best_eval[1]:
             # store new best point
@@ -106,8 +104,9 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
             # store the new current point
             curr, curr_eval = candidate, candidate_eval
             count+=1
+    print([best, best_eval[1], count])
     return [best, best_eval[1], count]
 
 
-retailStories = [Point((0, 20), 0, 2), Point((10, 30), 0, 3), Point((0, 40), 0, 3), Point((0, 50), 0, 3), Point((20, 20), 0, 3), Point((50, 20), 0, 3)]
-print(simulated_annealing(1000, 225.84, 0.01, retailStories, 20, 0.01, 15, V=[20,40,50], W=[8,16,24], mpg=5, Td=12))
+# retailStories = [Point((0, 20), 0, 2), Point((10, 30), 0, 3), Point((0, 40), 0, 3), Point((0, 50), 0, 3), Point((20, 20), 0, 3), Point((50, 20), 0, 3)]
+# print(simulated_annealing(1000, 225.84, 0.01, retailStories, 20, 0.01, 15, V=[20,40,50], W=[8,16,24], mpg=5, Td=12))
