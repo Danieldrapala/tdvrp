@@ -5,7 +5,7 @@ from tkinter import messagebox, filedialog
 import csv
 import os
 
-from simulated_annealing import simulated_annealing, Point
+from simulated_annealing import Point, simulated_annealing
 
 
 class TreeviewEdit(ttk.Treeview):
@@ -144,27 +144,97 @@ if __name__ == "__main__":
                             "Your data has been exported to " + os.path.basename(fln) + " successfully.")
 
 
+    def calc():
+        pass
+
+
+    def add_client():
+        # record = [client_id1.get(), client_name1.get(), client_x1.get(), client_y1.get(), client_demand1.get()]
+        # mydata1.append(record)
+        trv1.insert(parent='', index='end', values=(client_id1.get(),
+                                                    client_name1.get(),
+                                                    client_x1.get(),
+                                                    client_y1.get(),
+                                                    client_demand1.get()))
+
+        global mydata1
+        mydata1.append([client_id1.get(),
+                        client_name1.get(),
+                        client_x1.get(),
+                        client_y1.get(),
+                        client_demand1.get()])
+
+        client_id1.delete(0, END)
+        client_name1.delete(0, END)
+        client_x1.delete(0, END)
+        client_y1.delete(0, END)
+        client_demand1.delete(0, END)
+
+
+    def add_twindow():
+        trv2.insert(parent='', index='end', values=(twindow_id1.get(),
+                                                    twindow_start1.get(),
+                                                    twindow_end1.get(),
+                                                    twindow_velocity1.get()))
+
+        global mydata2
+        mydata2.append([twindow_id1.get(),
+                        twindow_start1.get(),
+                        twindow_end1.get(),
+                        twindow_velocity1.get()])
+
+        twindow_id1.delete(0, END)
+        twindow_start1.delete(0, END)
+        twindow_end1.delete(0, END)
+        twindow_velocity1.delete(0, END)
+
+
+    def del_client():
+        x = trv1.selection()[0]
+        trv1.delete(x)
+
+
+    def del_twindow():
+        x = trv2.selection()[0]
+        trv2.delete(x)
+
+
+    def del_all_clients():
+        for record in trv1.get_children():
+            trv1.delete(record)
+
+
+    def del_all_twindows():
+        for record in trv2.get_children():
+            trv2.delete(record)
+
+
     root = Tk()
 
     wrapper1 = LabelFrame(root, text="Initial Data")
     wrapper2 = LabelFrame(root, text="Client Data")
     wrapper3 = LabelFrame(root, text="Time Windows")
+    wrapper4 = LabelFrame(root, text="Add Client")
+    wrapper5 = LabelFrame(root, text="Add Time Window")
 
     wrapper1.grid(row=0, column=0, padx="5")
     wrapper2.grid(row=0, column=1, padx="5", rowspan="100")
     wrapper3.grid(row=0, column=2, padx="5", rowspan="100")
+    wrapper4.grid(row=101, column=1, padx="5", rowspan="100")
+    wrapper5.grid(row=101, column=2, padx="5", rowspan="100")
 
     # INITIAL DATA
     # M=1 -stala
-    Label(wrapper1, text="P parameter").grid(row=0, column=0, padx="5", pady="5")
-    Label(wrapper1, text="MPG").grid(row=1, column=0, padx="5", pady="5")
-    Label(wrapper1, text="Capacity").grid(row=2, column=0, padx="5", pady="5")
-    Label(wrapper1, text="Pause").grid(row=3, column=0, padx="5", pady="5")
-    Label(wrapper1, text="First departure time").grid(row=4, column=0, padx="5",
-                                                      pady="5")
+    a = Label(wrapper1, text="P parameter").grid(row=0, column=0, padx="5", pady="5")
+    b = Label(wrapper1, text="MPG").grid(row=1, column=0, padx="5", pady="5")
+    c = Label(wrapper1, text="Capacity").grid(row=2, column=0, padx="5", pady="5")
+    d = Label(wrapper1, text="Pause").grid(row=3, column=0, padx="5", pady="5")
+    e = Label(wrapper1, text="First departure time").grid(row=4, column=0, padx="5",
+                                                          pady="5")  # godzina wyjazdu pierwszego
 
     a1 = Entry(wrapper1)
     a1.grid(row=0, column=1, padx="5", pady="5")
+
     b1 = Entry(wrapper1)
     b1.grid(row=1, column=1, padx="5", pady="5")
     c1 = Entry(wrapper1)
@@ -173,50 +243,6 @@ if __name__ == "__main__":
     d1.grid(row=3, column=1, padx="5", pady="5")
     e1 = Entry(wrapper1)
     e1.grid(row=4, column=1, padx="5", pady="5")
-
-    # CUSTOMERS DATA LOOKUP
-    trv1 = TreeviewEdit(wrapper2, columns=(1, 2, 3, 4, 5), show="headings", height="30")
-    trv1.grid(row=0, column=0, columnspan=25, padx="5", pady="5")
-
-    trv1.heading(1, text="Customer ID")
-    trv1.heading(2, text="Name")
-    trv1.heading(3, text="X")
-    trv1.heading(4, text="Y")
-    trv1.heading(5, text="Demand")
-    trv1.column("# 1", anchor=CENTER, stretch=NO, width=100)
-    trv1.column("# 2", anchor=CENTER, stretch=NO, width=100)
-    trv1.column("# 3", anchor=CENTER, stretch=NO, width=100)
-    trv1.column("# 4", anchor=CENTER, stretch=NO, width=100)
-    trv1.column("# 5", anchor=CENTER, stretch=NO, width=100)
-
-    impbtn1 = Button(wrapper2, text="Import CSV", command=importcsv1)
-    impbtn1.grid(row=5, column=0, sticky="w", padx="5", pady="5")
-
-    expbtn1 = Button(wrapper2, text="Export CSV", command=export1)
-    expbtn1.grid(row=5, column=1, sticky="w", padx="5", pady="5")
-
-    # TIME WINDOWS DATA LOOKUP
-    trv2 = TreeviewEdit(wrapper3, columns=(1, 2, 3, 4), show="headings", height="30")
-    trv2.grid(row=0, column=0, columnspan=25, padx="5", pady="5")
-
-    trv2.heading(1, text="ID")
-    trv2.heading(2, text="Starting Hour")
-    trv2.heading(3, text="Ending Hour")
-    trv2.heading(4, text="Velocity")
-    trv2.column("# 1", anchor=CENTER, stretch=NO, width=100)
-    trv2.column("# 2", anchor=CENTER, stretch=NO, width=100)
-    trv2.column("# 3", anchor=CENTER, stretch=NO, width=100)
-    trv2.column("# 4", anchor=CENTER, stretch=NO, width=100)
-
-    impbtn2 = Button(wrapper3, text="Import CSV", command=importcsv2)
-    impbtn2.grid(row=5, column=0, sticky="w", padx="5", pady="5")
-
-    expbtn2 = Button(wrapper3, text="Export CSV", command=export2)
-    expbtn2.grid(row=5, column=1, sticky="w", padx="5", pady="5")
-
-    # OTHER BUTTONS
-    extbtn = Button(master=root, text="Exit", width="10", command=lambda: exit())
-    extbtn.grid(row=4, column=0, padx="5", pady="5", sticky="w")
 
 
     def makeRetailStoriesList():
@@ -248,9 +274,105 @@ if __name__ == "__main__":
         print(V,W)
         return simulated_annealing(1000, 225.84, 0.01, retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
 
+    # CUSTOMERS DATA LOOKUP
+    trv1 = TreeviewEdit(wrapper2, columns=(1, 2, 3, 4, 5), show="headings", height="30")
+    trv1.grid(row=0, column=0, columnspan=25, padx="5", pady="5")
+
+    trv1.heading(1, text="Customer ID")
+    trv1.heading(2, text="Name")
+    trv1.heading(3, text="X")
+    trv1.heading(4, text="Y")
+    trv1.heading(5, text="Demand")
+    trv1.column("# 1", anchor=CENTER, stretch=NO, width=100)
+    trv1.column("# 2", anchor=CENTER, stretch=NO, width=100)
+    trv1.column("# 3", anchor=CENTER, stretch=NO, width=100)
+    trv1.column("# 4", anchor=CENTER, stretch=NO, width=100)
+    trv1.column("# 5", anchor=CENTER, stretch=NO, width=100)
+
+    impbtn1 = Button(wrapper2, text="Import CSV", command=importcsv1)
+    impbtn1.grid(row=5, column=0, sticky="w", padx="5", pady="5")
+
+    expbtn1 = Button(wrapper2, text="Export CSV", command=export1)
+    expbtn1.grid(row=5, column=1, sticky="w", padx="5", pady="5")
+
+    del_client_btn = Button(wrapper2, text="Delete", command=del_client)
+    del_client_btn.grid(row=5, column=23, sticky="e", padx="5", pady="5")
+
+    del_all_clients_btn = Button(wrapper2, text="Delete All", command=del_all_clients)
+    del_all_clients_btn.grid(row=5, column=24, sticky="e", padx="5", pady="5")
+
+    # TIME WINDOWS DATA LOOKUP
+    trv2 = TreeviewEdit(wrapper3, columns=(1, 2, 3, 4), show="headings", height="30")
+    trv2.grid(row=0, column=0, columnspan=25, padx="5", pady="5")
+
+    trv2.heading(1, text="ID")
+    trv2.heading(2, text="Start Time")
+    trv2.heading(3, text="End Time")
+    trv2.heading(4, text="Velocity")
+    trv2.column("# 1", anchor=CENTER, stretch=NO, width=100)
+    trv2.column("# 2", anchor=CENTER, stretch=NO, width=100)
+    trv2.column("# 3", anchor=CENTER, stretch=NO, width=100)
+    trv2.column("# 4", anchor=CENTER, stretch=NO, width=100)
+
+    impbtn2 = Button(wrapper3, text="Import CSV", command=importcsv2)
+    impbtn2.grid(row=5, column=0, sticky="w", padx="5", pady="5")
+
+    expbtn2 = Button(wrapper3, text="Export CSV", command=export2)
+    expbtn2.grid(row=5, column=1, sticky="w", padx="5", pady="5")
+
+    del_twindow_btn = Button(wrapper3, text="Delete", command=del_twindow)
+    del_twindow_btn.grid(row=5, column=23, sticky="e", padx="5", pady="5")
+
+    del_all_twindows_btn = Button(wrapper3, text="Delete All", command=del_all_twindows)
+    del_all_twindows_btn.grid(row=5, column=24, sticky="e", padx="5", pady="5")
+
+    # ADD CLIENT
+
+    client_id = Label(wrapper4, text="ID").grid(row=0, column=0, padx="5", pady="5")
+    client_name = Label(wrapper4, text="Name").grid(row=0, column=2, padx="5", pady="5")
+    client_x = Label(wrapper4, text="X").grid(row=0, column=4, padx="5", pady="5")
+    client_y = Label(wrapper4, text="Y").grid(row=1, column=0, padx="5", pady="5")
+    client_demand = Label(wrapper4, text="Demand").grid(row=1, column=2, padx="5", pady="5")
+
+    client_id1 = Entry(wrapper4, width=16)
+    client_id1.grid(row=0, column=1, padx="5", pady="5")
+    client_name1 = Entry(wrapper4, width=16)
+    client_name1.grid(row=0, column=3, padx="5", pady="5")
+    client_x1 = Entry(wrapper4, width=16)
+    client_x1.grid(row=0, column=5, padx="5", pady="5")
+    client_y1 = Entry(wrapper4, width=16)
+    client_y1.grid(row=1, column=1, padx="5", pady="5")
+    client_demand1 = Entry(wrapper4, width=16)
+    client_demand1.grid(row=1, column=3, padx="5", pady="5")
+
+    add_cleint_btn = Button(wrapper4, text="ADD", command=add_client, width="10")
+    add_cleint_btn.grid(row=5, column=0, sticky="w", padx="5", pady="5")
+
+    # ADD TIME WINDOWS
+
+    twindow_id = Label(wrapper5, text="ID").grid(row=0, column=0, padx="5", pady="5")
+    twindow_start = Label(wrapper5, text="Start Time").grid(row=0, column=2, padx="5", pady="5")
+    twindow_end = Label(wrapper5, text="End Time").grid(row=1, column=2, padx="5", pady="5")
+    twindow_velocity = Label(wrapper5, text="Velocity").grid(row=1, column=0, padx="5", pady="5")
+
+    twindow_id1 = Entry(wrapper5, width=15)
+    twindow_id1.grid(row=0, column=1, padx="5", pady="5")
+    twindow_start1 = Entry(wrapper5, width=15)
+    twindow_start1.grid(row=0, column=3, padx="5", pady="5")
+    twindow_end1 = Entry(wrapper5, width=15)
+    twindow_end1.grid(row=1, column=3, padx="5", pady="5")
+    twindow_velocity1 = Entry(wrapper5, width=15)
+    twindow_velocity1.grid(row=1, column=1, padx="5", pady="5")
+
+    add_twindow_btn = Button(wrapper5, text="ADD", command=add_twindow, width="10")
+    add_twindow_btn.grid(row=5, column=0, sticky="w", padx="5", pady="5")
+
+    # OTHER BUTTONS
+    extbtn = Button(master=root, text="Exit", width="10", command=lambda: exit())
+    extbtn.grid(row=4, column=0, padx="5", pady="5", sticky="w")
+
     calcbtn = Button(master=root, text="Calculate solution", command=calc)
     calcbtn.grid(row=1, column=0, padx="5", pady="5", sticky="w")
 
-    root.title("My App")
-
+    root.title("MIS Project")
     root.mainloop()
