@@ -1,20 +1,20 @@
 from single_fuel_consumption import single_fuel_consumption
 
 CENTRUM_POINT = (0,0)
-def total_time(ps, Re, N, W, V, mpg, qarray):
+def total_time(ps, Re, N, W, V, mpg, qarray,td):
     tt=0
     s=1
     n=1
     fueldict = {}
-    while n < N:
+    td = td
+    while n <= N:
         tn=0
-        td=0
         fuel, t = single_fuel_consumption(td, CENTRUM_POINT, qarray[s].cords, W, V, mpg)
         fueldict[(0,s)] = fuel
-
         tn= tn + t
         tn = tn + ps
-        while s == Re[n]:
+
+        while s != Re[n]:
             td = tn
             fuel, t = single_fuel_consumption(td, qarray[s].cords, qarray[s+1].cords,  W, V, mpg)
             fueldict[(s, s+1)] = fuel
@@ -26,6 +26,6 @@ def total_time(ps, Re, N, W, V, mpg, qarray):
         fueldict[(s, 0)] = fuel
         tn = tn + t
         tt = tt + tn
-        n+=1
-        s+=1
+        n += 1
+        s += 1
     return tt, fueldict

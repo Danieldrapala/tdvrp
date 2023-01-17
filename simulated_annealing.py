@@ -13,6 +13,11 @@ class Point:
     self.s = s
     self.q = q
 
+  def __repr__(self):
+      return f"<Test cords:{self.cords} s:{self.s} q:{self.q}"
+  def __str__(self):
+      return str(self.cords) + str(self.s) + str(self.q)
+
 # define range for input
 
 
@@ -56,7 +61,7 @@ def randomize_solution(curr):
     newArr[min[sample[2]-1]].s = sample[0]
     return newArr
 
-def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mpg):
+def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mpg, Td):
 
     # generate an initial point
     # first point pierwsza siatka współrzednych poprawna
@@ -68,8 +73,10 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
     beta = tempstart - tempEnd / (A-1) * tempstart * tempEnd
     temp = tempstart
     # evaluate the initial point
-    best_eval = allthedata.whole_process(best, C, S, p, ps, qarray, V, W, mpg)
+    best_eval = allthedata.whole_process(p, C, S,  ps, qarray,  W, V, mpg, Td)
     # current working solution
+    print('TOTALFUEL', best_eval[1])
+
     curr, curr_eval = best, best_eval
     # run the algorithm
     for i in range(A):
@@ -79,13 +86,14 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
         for r in candidate:
             qarray[r.s] = r
         # evaluate candidate point
-        candidate_eval = allthedata.whole_process(candidate, C, S, p, ps, qarray, V, W, mpg)
+        candidate_eval = allthedata.whole_process(p, C, S,  ps, qarray,  W,V,mpg, Td)
+        print('TOTALFUEL',candidate_eval[1])
         # check for new best solution
-        if candidate_eval < best_eval:
+        if candidate_eval[1] < best_eval[1]:
             # store new best point
             best, best_eval = candidate, candidate_eval
         # difference between candidate and current point evaluation
-        diff = candidate_eval - curr_eval
+        diff = candidate_eval[1] - curr_eval[1]
         # calculate temperature for current epoch
         temp = temp / float(temp * beta + 1)
         # calculate metropolis acceptance criterion
@@ -94,8 +102,8 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
         if diff < 0 or rand() < metropolis:
             # store the new current point
             curr, curr_eval = candidate, candidate_eval
-    return [best, best_eval]
+    return [best, best_eval[1]]
 
 
 retailStories = [Point((0, 20), 0, 2), Point((10, 30), 0, 3), Point((0, 40), 0, 3), Point((0, 50), 0, 3), Point((20, 20), 0, 3), Point((50, 20), 0, 3)]
-simulated_annealing(1000, 225.84, 0.01, retailStories, 20, 0.01, 15, V=[20,40,50], W=[8,16,24], mpg=5)
+print(simulated_annealing(200, 225.84, 0.01, retailStories, 20, 0.01, 15, V=[20,40,50], W=[8,16,24], mpg=5, Td=12))

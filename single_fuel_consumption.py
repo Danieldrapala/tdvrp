@@ -5,14 +5,14 @@ def single_fuel_consumption(td, i, j, W, V, mpg):
     k = 0
     fk = 0
     d = calculate_distance(i, j)
-    while td < W[k + 1]:
+    while td % 24 >= W[k + 1]:
         k += 1
     ta = td + d / V[k]
     f = gph(mpg,V[k]) * d / V[k]
-    while ta >= W[k+1]:
-        ta = (ta - W[k+1]) * V[k]/ V[k+1] + W[k+1]
-        fk = fk + (W[k+1] - max(td, W[k]) * gph(mpg, V[k]))
-        f = fk + (ta - W[k+1]) * gph(mpg, V[k+1])
+    while ta % 24 >= W[k+1]:
+        ta = (ta % 24 - W[k+1]) * V[k]/ V[k+1] + W[k+1]
+        fk = fk + (W[k+1] - max(td % 24, W[k])) * gph(mpg, V[k])
+        f = fk + (ta % 24 - W[k+1]) * gph(mpg, V[k+1])
         k += 1
     t = ta - td
     return f, t
