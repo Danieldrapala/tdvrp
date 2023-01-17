@@ -105,8 +105,8 @@ def simulated_annealing(A, tempstart, tempEnd, retailStories, C, p, ps, V, W, mp
             # store the new current point
             curr, curr_eval = candidate, candidate_eval
             count+=1
-    print([best, best_eval[1], count])
-    return [best, best_eval[1], count]
+    print([best, best_eval[0], best_eval[1], best_eval[2], best_eval[3],  best_eval[4], count])
+    return [best, best_eval[0], best_eval[1], best_eval[2], best_eval[3], best_eval[4], count]
 
 
 # retailStories = [Point((0, 20), 0, 2), Point((10, 30), 0, 3), Point((0, 40), 0, 3), Point((0, 50), 0, 3), Point((20, 20), 0, 3), Point((50, 20), 0, 3)]

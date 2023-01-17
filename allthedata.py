@@ -12,4 +12,4 @@ def whole_process( p, C, S, ps, qarray, W, V, mpg, Td):
     tt, fuelDict = total_time.total_time(ps, Re, N, W, V, mpg, qarray,Td)
     print('fuelDict', fuelDict)
     tf = fuel_consumption.fuel_consumption(N, Re, Rb, p, fuelDict, qarray)
-    return tt, tf
+    return (tt, tf, Re, Rb, N)

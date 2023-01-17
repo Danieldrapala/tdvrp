@@ -144,10 +144,6 @@ if __name__ == "__main__":
                             "Your data has been exported to " + os.path.basename(fln) + " successfully.")
 
 
-    def calc():
-        pass
-
-
     def add_client():
         # record = [client_id1.get(), client_name1.get(), client_x1.get(), client_y1.get(), client_demand1.get()]
         # mydata1.append(record)
@@ -211,18 +207,32 @@ if __name__ == "__main__":
 
     root = Tk()
 
+    wrapperSA = LabelFrame(root, text="SA Data")
     wrapper1 = LabelFrame(root, text="Initial Data")
     wrapper2 = LabelFrame(root, text="Client Data")
     wrapper3 = LabelFrame(root, text="Time Windows")
     wrapper4 = LabelFrame(root, text="Add Client")
     wrapper5 = LabelFrame(root, text="Add Time Window")
 
+    wrapperSA.grid(row=1, column=0, padx="5")
     wrapper1.grid(row=0, column=0, padx="5")
     wrapper2.grid(row=0, column=1, padx="5", rowspan="100")
     wrapper3.grid(row=0, column=2, padx="5", rowspan="100")
     wrapper4.grid(row=101, column=1, padx="5", rowspan="100")
     wrapper5.grid(row=101, column=2, padx="5", rowspan="100")
 
+    num_ofIterations = Label(wrapperSA, text="NumberOfIterations").grid(row=0, column=0, padx="5", pady="5")
+    num_ofIterationsInput = Entry(wrapperSA)
+    num_ofIterationsInput.insert(0,"1000")
+    num_ofIterationsInput.grid(row=0, column=1, padx="5", pady="5")
+    Label(wrapperSA, text="Temp initial").grid(row=1, column=0, padx="5", pady="5")
+    tempstartInput = Entry(wrapperSA)
+    tempstartInput.insert(0,"225.84")
+    tempstartInput.grid(row=1, column=1, padx="5", pady="5")
+    Label(wrapperSA, text="Temp End").grid(row=2, column=0, padx="5", pady="5")
+    tempendInput = Entry(wrapperSA)
+    tempendInput.insert(0,"0.01")
+    tempendInput.grid(row=2, column=1, padx="5", pady="5")
     # INITIAL DATA
     # M=1 -stala
     a = Label(wrapper1, text="P parameter").grid(row=0, column=0, padx="5", pady="5")
@@ -272,7 +282,7 @@ if __name__ == "__main__":
         print(retailStories)
         V,W = takeVelocityAndIntervalArray()
         print(V,W)
-        return simulated_annealing(1000, 225.84, 0.01, retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
+        return simulated_annealing(int(num_ofIterationsInput.get()), float(tempstartInput.get()), float(tempendInput.get()), retailStories, float(c1.get()), float(a1.get()),float(d1.get()),V, W,float(b1.get()),float(e1.get()))
 
     # CUSTOMERS DATA LOOKUP
     trv1 = TreeviewEdit(wrapper2, columns=(1, 2, 3, 4, 5), show="headings", height="30")
@@ -372,7 +382,7 @@ if __name__ == "__main__":
     extbtn.grid(row=4, column=0, padx="5", pady="5", sticky="w")
 
     calcbtn = Button(master=root, text="Calculate solution", command=calc)
-    calcbtn.grid(row=1, column=0, padx="5", pady="5", sticky="w")
+    calcbtn.grid(row=2, column=0, padx="5", pady="5", sticky="w")
 
     root.title("MIS Project")
     root.mainloop()
