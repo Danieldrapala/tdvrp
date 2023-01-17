@@ -248,7 +248,7 @@ if __name__ == "__main__":
     def makeRetailStoriesList():
         array = []
         for i in mydata1:
-            array.append(Point((float(i[2]),float(i[3])),0,float(i[4])))
+            array.append(Point((float(i[2]),float(i[3])),0,float(i[4]),i[1]))
         return array
 
 

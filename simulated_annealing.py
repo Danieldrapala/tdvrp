@@ -8,13 +8,14 @@ import allthedata
 
 
 class Point:
-  def __init__(self, cords, s, q):
+  def __init__(self, cords, s, q, name):
     self.cords = cords
     self.s = s
     self.q = q
+    self.name = name
 
   def __repr__(self):
-      return f"<Test cords:{self.cords} s:{self.s} q:{self.q}"
+      return f"<Test cords:{self.cords} s:{self.s} q:{self.q} name: {self.name}"
   def __str__(self):
       return str(self.cords) + str(self.s) + str(self.q)
 
