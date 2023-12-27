@@ -1,7 +1,4 @@
-# simulated annealing algorithm
-from numpy import exp
-from numpy.random import rand, randn
-
+import numpy
 
 def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
     # generate an initial point
@@ -33,3 +30,7 @@ def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
             # store the new current point
             curr, curr_eval = candidate, candidate_eval
     return [best, best_eval]
+
+
+def show_graph(graph_grid):
+    return 0
