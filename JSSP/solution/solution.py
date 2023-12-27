@@ -4,7 +4,6 @@ import numpy as np
 
 from ._makespan import compute_machine_makespans
 from ._schedule_creator import create_schedule_xlsx_file, create_gantt_chart
-from ..data import Data
 from ..exception import IncompleteSolutionException
 
 
@@ -26,31 +25,7 @@ class Operation:
 
 
 class Solution:
-    """
-    Solution class which is composed of a 2d nparray of operations where
-    an operation is a 1d nparray in the form [job_id, task_id, sequence, machine],
-    a 1d nparray memory view of machine makespan times,
-    and the makespan time.
-
-    :type data: Data
-    :param data: JSSP instance data
-
-    :type operation_2d_array: nparray
-    :param operation_2d_array: 2d nparray of operations
-    """
-
     def __init__(self, data, operation_2d_array):
-        """
-        Initializes an instance of Solution.
-
-        First it checks if the operation_2d_array parameter is feasible,
-        then it computes the nparray of machine makespan times and the makespan time of the Solution.
-
-        :raise: InfeasibleSolutionException if solution is infeasible
-        :raise: IncompleteSolutionException if solution is incomplete
-
-        See help(Solution)
-        """
         if operation_2d_array.shape[0] != data.total_number_of_tasks:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
                                               f"Should be {data.total_number_of_tasks}")

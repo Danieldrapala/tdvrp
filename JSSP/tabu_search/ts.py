@@ -7,51 +7,14 @@ import numpy as np
 
 from ._generate_neighbor import generate_neighbor
 from ..exception import InfeasibleSolutionException
-from ..util import get_stop_condition, Heap
+from ..util import Heap
 
 
 class TabuSearchAgent:
-    """
-    Tabu search optimization agent.
-
-    :type stopping_condition: float
-    :param stopping_condition: either the duration in seconds or the number of iterations to search
-
-    :type time_condition: bool
-    :param time_condition: if true TS is ran for stopping_condition number of seconds else it is ran for stopping_condition number of iterations
-
-    :type initial_solution: Solution
-    :param initial_solution: initial solution to start the tabu search from
-
-    :type num_solutions_to_find: int
-    :param num_solutions_to_find: number of best solutions to find
-
-    :type tabu_list_size: int
-    :param tabu_list_size: size of the Tabu list
-
-    :type neighborhood_size: int
-    :param neighborhood_size: size of neighborhoods to generate during each iteration
-
-    :type neighborhood_wait: float
-    :param neighborhood_wait: maximum time (in seconds) to wait while generating a neighborhood
-
-    :type probability_change_machine: float
-    :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
-
-    :type reset_threshold: int
-    :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
-
-    :type benchmark: bool
-    :param benchmark: if true benchmark data is gathered
-    """
     def __init__(self, stopping_condition, time_condition, initial_solution, num_solutions_to_find=1,
                  tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
-                 reset_threshold=100, benchmark=False):
-        """
-        Initializes an instance of TabuSearchAgent.
+                 reset_threshold=100):
 
-        See help(TabuSearchAgent)
-        """
         self.runtime = None
         self.iterations = None
         self.time_condition = time_condition
@@ -67,36 +30,12 @@ class TabuSearchAgent:
         self.neighborhood_wait = neighborhood_wait
         self.probability_change_machine = probability_change_machine
         self.reset_threshold = reset_threshold
-        self.benchmark = benchmark
 
         # uninitialized ts results
         self.all_solutions = []
         self.best_solution = None
 
-        if benchmark:
-            # uninitialized ts benchmark results
-            self.benchmark_iterations = 0
-            self.neighborhood_size_v_iter = []
-            self.seed_solution_makespan_v_iter = []
-            self.tabu_size_v_iter = []
-            self.min_makespan_coordinates = (0, 0)
-
     def _generate_neighborhood(self, seed_solution, dependency_matrix_index_encoding, usable_machines_matrix):
-        """
-        Generates a neighborhood of Solutions instances that are neighbors of the seed_solution parameter.
-
-        :type seed_solution: Solution
-        :param seed_solution: The solution to generate a neighborhood of
-
-        :type dependency_matrix_index_encoding: nparray
-        :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
-
-        :type usable_machines_matrix: nparray
-        :param usable_machines_matrix: Usable machines matrix from static Data
-
-        :rtype: SolutionSet
-        :returns: Neighboring Solutions
-        """
         stop_time = time.time() + self.neighborhood_wait
         neighborhood = _SolutionSet()
         while neighborhood.size < self.neighborhood_size and time.time() < stop_time:
@@ -108,24 +47,10 @@ class TabuSearchAgent:
                     neighborhood.add(neighbor)
 
             except InfeasibleSolutionException:
-                # this should not happen
-                # if it does don't add the infeasible solution to the neighborhood
                 pass
         return neighborhood
 
     def start(self, multi_process_queue=None):
-        """
-        Starts the search for this TabuSearchAgent.
-
-        If the multi_process_queue parameter is not None, this function attempts to push this TabuSearchAgent to the multi processing queue.
-
-        :type multi_process_queue: multiprocessing.Queue
-        :param multi_process_queue: queue to put this TabuSearchAgent into
-
-        :rtype: Solution
-        :returns: best Solution found
-        """
-
         # get static data
         dependency_matrix_index_encoding = self.initial_solution.data.job_task_index_matrix
         usable_machines_matrix = self.initial_solution.data.usable_machines_matrix
@@ -140,20 +65,9 @@ class TabuSearchAgent:
         # variables used for restarts
         lacking_solution = seed_solution
         counter = 0
-
         iterations = 0
 
-        # variables used for benchmarks
-        neighborhood_size_v_iter = []
-        tabu_size_v_iter = []
-        seed_solution_makespan_v_iter = []
-        absolute_best_solution_makespan = seed_solution.makespan
-        absolute_best_solution_iteration = 0
-
-        # create stopping condition function
-        stop_condition = get_stop_condition(self.time_condition, self.runtime, self.iterations)
-
-        while not stop_condition(iterations):
+        while not iterations >= self.iterations:
             neighborhood = self._generate_neighborhood(seed_solution,
                                                        dependency_matrix_index_encoding,
                                                        usable_machines_matrix)
@@ -197,14 +111,7 @@ class TabuSearchAgent:
 
                 counter = 0
                 lacking_solution = seed_solution
-
-            if self.benchmark:
-                iterations += 1
-                neighborhood_size_v_iter.append(neighborhood.size)
-                seed_solution_makespan_v_iter.append(seed_solution.makespan)
-                tabu_size_v_iter.append(len(tabu_list))
-            elif not self.time_condition:
-                iterations += 1
+            iterations += 1
 
         # convert best_solutions_heap to a sorted list
         best_solutions_list = []
@@ -216,13 +123,6 @@ class TabuSearchAgent:
         self.all_solutions = best_solutions_list
         self.best_solution = min(best_solutions_list)
 
-        if self.benchmark:
-            self.benchmark_iterations = iterations
-            self.neighborhood_size_v_iter = neighborhood_size_v_iter
-            self.seed_solution_makespan_v_iter = seed_solution_makespan_v_iter
-            self.tabu_size_v_iter = tabu_size_v_iter
-            self.min_makespan_coordinates = (absolute_best_solution_iteration, absolute_best_solution_makespan)
-
         if multi_process_queue is not None:
             # pickle results and add to Queue
             self.initial_solution.machine_makespans = np.asarray(self.initial_solution.machine_makespans)
@@ -230,11 +130,9 @@ class TabuSearchAgent:
 
         return self.best_solution
 
-
 '''
 TS data structures
 '''
-
 
 class _TabuList(Queue):
     """
@@ -261,22 +159,11 @@ class _TabuList(Queue):
 
 
 class _SolutionSet:
-    """
-    Set for containing Solution instances.
-    """
     def __init__(self):
         self.size = 0
         self.solutions = {}
 
     def add(self, solution):
-        """
-        Adds a solution and increments size.
-
-        :type solution: Solution
-        :param solution: solution to add
-
-        :returns: None
-        """
         if solution.makespan not in self.solutions:
             self.solutions[solution.makespan] = [solution]
         else:
@@ -285,14 +172,6 @@ class _SolutionSet:
         self.size += 1
 
     def remove(self, solution):
-        """
-        Removes a solution and decrements size.
-
-        :type solution: Solution
-        :param solution: solution to remove
-
-        :returns: None
-        """
         if len(self.solutions[solution.makespan]) == 1:
             del self.solutions[solution.makespan]
         else:
@@ -301,13 +180,4 @@ class _SolutionSet:
         self.size -= 1
 
     def __contains__(self, solution):
-        """
-        Returns true if the solution is in this _SolutionSet.
-
-        :type solution: Solution
-        :param solution: solution to look for
-
-        :rtype: bool
-        :returns: true if the solution is in this _SolutionSet
-        """
         return solution.makespan in self.solutions and solution in self.solutions[solution.makespan]

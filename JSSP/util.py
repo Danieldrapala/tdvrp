@@ -1,34 +1,4 @@
 import heapq
-import time
-
-
-def get_stop_condition(time_condition, runtime, max_iterations):
-    """
-    Gets a function for checking the stopping condition of an optimization function.
-
-    :type time_condition: bool
-    :param time_condition: If True then runtime is used as the stopping condition
-
-    :type runtime: float
-    :param runtime: number of seconds that the optimization function should run for
-
-    :type max_iterations: int
-    :param max_iterations: maximum number of iterations that the optimization function should execute
-
-    :rtype: function
-    :return: function which returns True if the stopping condition is met
-    """
-    if time_condition:
-        stop_time = time.time() + runtime
-
-        def stop_condition(_):
-            return time.time() >= stop_time
-    else:
-        def stop_condition(iterations):
-            return iterations >= max_iterations
-
-    return stop_condition
-
 
 class Heap:
     """

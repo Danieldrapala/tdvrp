@@ -5,7 +5,6 @@ from enum import Enum
 from ._ga_helpers import crossover
 from ..exception import InfeasibleSolutionException
 from ..solution import Solution, SolutionFactory
-from ..util import get_stop_condition
 
 """
 GA selection functions
@@ -119,12 +118,7 @@ class GeneticAlgorithmAgent:
 
     def __init__(self, stopping_condition, population, time_condition=False,
                  selection_method_enum=GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
-                 selection_size=2, benchmark=False):
-        """
-        Initializes an instance of GeneticAlgorithmAgent.
-
-        See help(GeneticAlgorithmAgent)
-        """
+                 selection_size=2):
         assert selection_size is not None and 1 < selection_size, "selection_size must be an integer greater than 1"
 
         # parameters
@@ -147,19 +141,7 @@ class GeneticAlgorithmAgent:
         self.result_population = []
         self.best_solution = None
 
-        if benchmark:
-            self.benchmark_iterations = 0
-            self.best_solution_makespan_v_iter = []
-            self.avg_population_makespan_v_iter = []
-            self.min_makespan_coordinates = []
-
     def start(self):
-        """
-        Starts the genetic algorithm for this GeneticAlgorithmAgent.
-
-        :rtype: Solution
-        :returns: best Solution found
-        """
         population = self.initial_population[:]
         best_solution = min(population)
         iterations = 0
@@ -171,19 +153,8 @@ class GeneticAlgorithmAgent:
 
         factory = SolutionFactory(data)
 
-        # variables used for benchmarks
-        best_solution_makespan_v_iter = []
-        avg_population_makespan_v_iter = []
-        best_solution_iteration = 0
-
-        # create stopping condition function
-        stop_condition = get_stop_condition(self.time_condition, self.runtime, self.iterations)
-
         not_done = True
-        while not stop_condition(iterations):
-            if self.benchmark:
-                avg_population_makespan_v_iter.append(statistics.mean([sol.makespan for sol in population]))
-
+        while not iterations >= self.iterations:
             next_population = []
             while len(population) > self.selection_size and not_done:
 
@@ -203,7 +174,7 @@ class GeneticAlgorithmAgent:
                         if child1 != parent1 and child1 != parent2:
                             feasible_child = True
                     except InfeasibleSolutionException:
-                        if stop_condition(iterations):
+                        if iterations >= self.iterations:
                             not_done = False
                             break
 
@@ -217,7 +188,7 @@ class GeneticAlgorithmAgent:
                         if child2 != parent1 and child2 != parent2:
                             feasible_child = True
                     except InfeasibleSolutionException:
-                        if stop_condition(iterations):
+                        if iterations >= self.iterations:
                             not_done = False
                             break
 
@@ -243,25 +214,10 @@ class GeneticAlgorithmAgent:
                 # check for better solution than best_solution
                 if min(child1, child2) < best_solution:
                     best_solution = min(child1, child2)
-                    if self.benchmark:
-                        best_solution_iteration = iterations
-
-            if self.benchmark:
-                best_solution_makespan_v_iter.append(best_solution.makespan)
-                iterations += 1
-            elif not self.time_condition:
-                iterations += 1
-
+            iterations += 1
             next_population += population
             population = next_population
 
         self.best_solution = best_solution
         self.result_population = next_population
-
-        if self.benchmark:
-            self.benchmark_iterations = iterations
-            self.best_solution_makespan_v_iter = best_solution_makespan_v_iter
-            self.avg_population_makespan_v_iter = avg_population_makespan_v_iter
-            self.min_makespan_coordinates = (best_solution_iteration, best_solution.makespan)
-
         return self.best_solution
