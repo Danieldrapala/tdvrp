@@ -7,12 +7,11 @@ import pandas as pd
 
 
 class Task:
-    def __init__(self, job_id, task_id, sequence, usable_machines, pieces):
+    def __init__(self, job_id, task_id, sequence, usable_machines):
         self._job_id = job_id
         self._task_id = task_id
         self._sequence = sequence
         self._usable_machines = usable_machines
-        self._pieces = pieces
 
     def get_job_id(self):
         return self._job_id
@@ -26,22 +25,17 @@ class Task:
     def get_usable_machines(self):
         return self._usable_machines
 
-    def get_pieces(self):
-        return self._pieces
-
     def __eq__(self, other):
         return self._job_id == other.get_job_id() \
                and self._task_id == other.get_task_id() \
                and self._sequence == other.get_sequence() \
-               and np.array_equal(self._usable_machines, other.get_usable_machines())  # note pieces are omitted
+               and np.array_equal(self._usable_machines, other.get_usable_machines())
 
     def __str__(self):
         return f"[{self._job_id}, " \
             f"{self._task_id}, " \
             f"{self._sequence}, " \
-            f"{self._usable_machines}, " \
-            f"{self._pieces}]"
-
+            f"{self._usable_machines}, "
 
 class Job:
     def __init__(self, job_id):
@@ -124,7 +118,7 @@ class Data(ABC):
                  f"total machines = {self.total_number_of_machines}\n" \
                  f"max tasks for a job = {self.max_tasks_for_a_job}\n" \
                  f"tasks:\n" \
-                 f"[jobId, taskId, sequence, usable_machines, pieces]\n"
+                 f"[jobId, taskId, sequence, usable_machines]\n"
 
         for job in self.jobs:
             for task in job.get_tasks():
@@ -151,76 +145,6 @@ class Data(ABC):
                       f"{self.machine_speeds}"
 
         return result
-
-    @staticmethod
-    def convert_fjs_to_csv(fjs_file, output_dir):
-        """
-        Converts a fjs file into three csv files, jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
-        then it puts them in the output directory.
-
-        :type fjs_file: Path | str
-        :param fjs_file: path to the fjs file containing a flexible job shop schedule problem instance
-
-        :type output_dir: Path | str
-        :param output_dir: path to the directory to place the csv files into
-
-        :returns: None
-        """
-        total_num_tasks = 0
-
-        fjs_file = Path(fjs_file)
-        output_dir = Path(output_dir)
-
-        if not output_dir.exists():
-            output_dir.mkdir(parents=True)
-
-        # read .fjs input file and create jobTasks.csv
-        with open(fjs_file, 'r') as fin:
-            with open(output_dir / 'jobTasks.csv', 'w') as fout:
-                fout.write("Job,Task,Sequence,Usable_Machines,Pieces\n")
-
-                lines = [line for line in [l.strip() for l in fin] if line]
-                line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')[:-1]]
-
-                total_num_machines = line[1]
-
-                # iterate over jobs
-                for job_id, tasks in enumerate(lines[1:]):
-
-                    # get the tasks data
-                    task_data = [int(s) for s in re.sub(r'\s+', ' ', tasks.strip()).split(' ')]
-                    total_num_tasks += task_data[0]
-                    task_id = 0
-                    sequence = 0
-
-                    # iterate over tasks
-                    i = 1
-                    while i < len(task_data):
-                        usable_machines = "["
-                        output_line = f"{job_id},{task_id},{sequence},"
-                        num_usable_machines = task_data[i]
-
-                        for j in range(i + 1, i + num_usable_machines * 2 + 1, 2):
-                            usable_machines += f"{task_data[j] - 1} "
-
-                        output_line += usable_machines[:-1] + "]," + str(task_data[i + 2])
-                        i += num_usable_machines * 2 + 1
-                        task_id += 1
-                        sequence += 1
-                        fout.write(output_line + '\n')
-
-        # create machineRunSpeed.csv
-        with open(output_dir / 'machineRunSpeed.csv', 'w') as fout:
-            fout.write("Machine,RunSpeed\n")
-            for i in range(total_num_machines):
-                fout.write(f"{i},1\n")
-
-        # create sequenceDependencyMatrix.csv
-        with open(output_dir / 'sequenceDependencyMatrix.csv', 'w') as fout:
-            line = "0," * total_num_tasks + "0\n"
-            for _ in range(total_num_tasks + 1):
-                fout.write(line)
-
 
 class SpreadsheetData(Data):
     def __init__(self, seq_dep_matrix, machine_speeds, job_tasks):
@@ -281,7 +205,7 @@ class SpreadsheetData(Data):
 
                 # create row in task_processing_times
                 for machine in task.get_usable_machines():
-                    self.task_processing_times_matrix[task_index, machine] = task.get_pieces() / self.machine_speeds[
+                    self.task_processing_times_matrix[task_index, machine] = self.machine_speeds[
                         machine]
 
                 task_index += 1
@@ -295,8 +219,7 @@ class SpreadsheetData(Data):
                 int(row['Job']),
                 int(row['Task']),
                 int(row['Sequence']),
-                np.array([int(x) for x in row['Usable_Machines'][1:-1].strip().split(' ')], dtype=np.intc),
-                int(row['Pieces'])
+                np.array([int(x) for x in row['Usable_Machines'][1:-1].strip().split(' ')], dtype=np.intc)
             )
             job_id = task.get_job_id()
 

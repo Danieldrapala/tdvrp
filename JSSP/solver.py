@@ -7,6 +7,7 @@ from . import genetic_algorithm
 from . import tabu_search
 from .solution import SolutionFactory, Solution
 
+
 class Solver:
 
     def __init__(self, data):
@@ -101,19 +102,19 @@ class Solver:
 
     def _genetic_algorithm(self, stopping_condition, time_condition, population=None, population_size=200,
                            selection_method_enum=genetic_algorithm.GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
-                           selection_size=5, benchmark=False, verbose=False):
+                           selection_size=5, verbose=False):
         if population is None:
             population = [self.solution_factory.get_solution() for _ in range(population_size)]
         else:
-            population = population[:] + [self.solution_factory.get_solution() for _ in range(max(0, population_size - len(population)))]
+            population = population[:] + [self.solution_factory.get_solution() for _ in
+                                          range(max(0, population_size - len(population)))]
 
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
                                                                 population,
                                                                 time_condition,
                                                                 selection_method_enum,
                                                                 mutation_probability,
-                                                                selection_size,
-                                                                benchmark
+                                                                selection_size
                                                                 )
 
         if verbose:
@@ -132,9 +133,3 @@ class Solver:
         # check if both agents are None
         if self.ts_agent_list is None and self.ga_agent is None:
             raise UserWarning("Solver's agents were None. You need to run at least one optimization function.")
-
-        # check if one agent was ran in benchmark mode
-        if not any([self.ts_agent_list is None or all(ts_agent.benchmark for ts_agent in self.ts_agent_list),
-                    self.ga_agent is None or self.ga_agent.benchmark]):
-            raise UserWarning("You must run one of the optimization functions in benchmark mode.")
-
