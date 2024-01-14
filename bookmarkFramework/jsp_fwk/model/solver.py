@@ -1,6 +1,6 @@
 '''Base solver for Job-Shop Schedule Problem. 
 '''
-
+import logging
 import time
 import traceback
 from threading import (Thread, currentThread)

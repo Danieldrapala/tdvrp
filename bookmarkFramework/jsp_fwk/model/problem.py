@@ -218,5 +218,5 @@ class JSProblem(Cloneable):
                 ops.append(op)
                 i += 1
         
-        return ops    
+        return ops
 

@@ -100,7 +100,7 @@ class MachineStep(Step):
 
 class OperationStep(JobStep, MachineStep):
 
-    def __init__(self, op:Operation=None) -> None:
+    def __init__(self, op: Operation=None) -> None:
         '''An operation step wrapping the source operation instance. A step might belong to
         two kinds of sequence chain: a job chain and a machine chain.
 
@@ -115,10 +115,10 @@ class OperationStep(JobStep, MachineStep):
         JobStep.__init__(self, op)
         MachineStep.__init__(self, op)
 
-        # final variable in mathmestical model, while shadow variable in disjunctive graph 
+        # final variable in mathematical model, while shadow variable in disjunctive graph
         # model, i.e. the start time is determined by operation sequence
         self.__start_time = 0.0
-    
+
 
     @property
     def start_time(self) -> float: return self.__start_time
@@ -126,6 +126,14 @@ class OperationStep(JobStep, MachineStep):
     @property
     def end_time(self) -> float: return self.__start_time + self.source.duration
 
+    @property
+    def tail(self) -> float:
+        num = 0
+        ref = self
+        while ref:
+            num += ref.source.duration
+            ref = ref.next_job_op
+        return num
 
     def update_start_time(self, start_time:float=None):
         '''Set start time directly, or update start time based on operations sequence in disjunctive 
@@ -142,3 +150,5 @@ class OperationStep(JobStep, MachineStep):
         # machine chain. Otherwise, use the default start time
         elif self.pre_machine_op:        
             self.__start_time = max(self.pre_job_op.end_time, self.pre_machine_op.end_time)
+
+
