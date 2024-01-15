@@ -1,6 +1,6 @@
 import random
 import time
-
+import plotly.graph_objs as go
 from jsp_fwk import JSSolution, JSProblem, JSSolver
 from jsp_fwk.common.exception import JSPException
 from operator import attrgetter
@@ -27,7 +27,7 @@ class GeneticAlgorithmSolver(JSSolver):
         self.population_size = population_size
 
     def do_solve(self, problem: JSProblem):
-        GAP = 2
+        GAP = 5
         # population = [self.generate_chromosome_solution(solution, self.generate_chromosome_by_tail(solution, i, GAP)) for i in range(self.population_size)]
         popchrom = list(map(list, zip(*[self.generate_chromosome_solution(problem,i=i,gap=GAP) for i in range(self.population_size)])))
         population = popchrom[0]
@@ -37,6 +37,7 @@ class GeneticAlgorithmSolver(JSSolver):
         # get static data
         next_population = []
         not_done = True
+        j_values = []
         while not iterations >= self.n_iterations:
             next_population = []
             while len(population) > self.selection_size and not_done:
@@ -65,7 +66,7 @@ class GeneticAlgorithmSolver(JSSolver):
                     # next_population.append(self.generate_chromosome_solution(randomSolution, self.generate_chromosome_by_tail(solution,len(next_population), GAP)))
                     next_population.append(self.generate_chromosome_solution(problem, len(next_population), GAP))
                     added += 1
-
+                j_values.append(min(child1[0].makespan, child2[0].makespan))
                 # check for better solution than best_solution
                 if min(child1[0].makespan, child2[0].makespan) < best_solution.makespan:
                     best_solution = min([child1[0], child2[0]], key=attrgetter("makespan"))
@@ -73,10 +74,24 @@ class GeneticAlgorithmSolver(JSSolver):
             iterations += 1
             next_population += population
             population = next_population
+        x_values = list(range(len(j_values)))
 
+        # Create a trace for the scatter plot
+        trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=10))
+
+        # Create a layout for the plot
+        layout = go.Layout(title='Scatter Plot of i and j', xaxis=dict(title='Index of j_values'),
+                           yaxis=dict(title='j values'))
+
+        # Create a figure with the trace and layout
+        fig = go.Figure(data=[trace], layout=layout)
+
+        # Show the plot
+        fig.show()
         self.best_solution = best_solution
         self.result_population = next_population
         problem.update_solution(best_solution)
+        print("koniec")
 
     def createChild(self, problem, parent1, parent2, ux):
         child1 = []

@@ -1,6 +1,6 @@
 import logging
 from jsp_fwk import (JSProblem, JSSolution)
-from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver
+from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver, PriorityDispatchSolver
 from jsp_fwk.solver.geneticAlgorithm import GeneticAlgorithmSolver
 from jsp_fwk.solver.simulatedAnealing import SimulatedAnnealingSolver
 from jsp_fwk.solver.tabuSearch import TabuSearchSolver
@@ -28,11 +28,11 @@ if __name__=='__main__':
     # s = GoogleORCPSolver()
 
     # priority dispatching
-    # rules = ['ct']
+    rules = ['MTWR']
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
-    # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=25, n_iterations=10000)
-    s = SimulatedAnnealingSolver(n_iterations=10000, temp=200)
+    s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
+    # s = SimulatedAnnealingSolver(n_iterations=500, temp=20)
     # s = TabuSearchSolver(n_iterations=10000,num_solutions_to_find=1, tabu_list_size=25)
 
     # pulp solver

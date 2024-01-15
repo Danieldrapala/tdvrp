@@ -91,6 +91,7 @@ class PriorityDispatchSolver(JSSolver):
         while head_ops:
             # dispatch operation with the first priority
             op = min(head_ops, key=lambda op: self.__dispatching_rule(op, solution))
+            print(self.__dispatching_rule(op, solution))
             solution.dispatch(op)
             
             # update imminent operations
