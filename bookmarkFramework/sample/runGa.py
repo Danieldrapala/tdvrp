@@ -31,9 +31,9 @@ if __name__=='__main__':
     rules = ['MTWR']
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
-    # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
+    s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=30, n_iterations=10000)
     # s = SimulatedAnnealingSolver(n_iterations=500, temp=20)
-    s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
+    # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
 
     # pulp solver
     # s = PuLPSolver(max_time=60)

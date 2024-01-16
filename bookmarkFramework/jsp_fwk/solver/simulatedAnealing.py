@@ -32,7 +32,8 @@ class SimulatedAnnealingSolver(JSSolver):
         curr_makespan = best.makespan
         # run the algorithm
         t=self.temp
-        tk = 10e-2
+        # tk = 10e-2
+        tk = 10e-4
         j_values=[]
         while t > tk:
             t = t * 0.8
@@ -61,7 +62,6 @@ class SimulatedAnnealingSolver(JSSolver):
                     curr_permutation, curr_makespan = candidate_permutation, candidate.makespan
                 elif diff > 0:
                     metropolis = exp(-diff / t)
-                    print(metropolis)
                     if rand() < metropolis:
                         curr_permutation, curr_makespan = candidate_permutation, candidate.makespan
         #
@@ -174,4 +174,4 @@ class SimulatedAnnealingSolver(JSSolver):
         return random.sample(range(0, len(problem.ops)), len(problem.ops))
 
     def generate_initial_solution_permutation(self, solution):
-        return [op.tail for op in solution.ops]
+        return [op.tail/op.source.duration for op in solution.ops]
