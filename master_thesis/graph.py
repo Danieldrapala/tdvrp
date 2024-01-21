@@ -16,7 +16,7 @@ class DirectedGraph:
 
     def __str__(self) -> str:
         '''Show adjacent list of graph.'''
-        f = lambda node: str(node.id) +","+str(node.source.duration)
+        f = lambda node: str(node.id)
         items = [f'{node.id}: {",".join(map(f, node_list))}' for node, node_list in self.__adjacency.items()]
         return '\n'.join(items)
 
@@ -67,7 +67,7 @@ class DirectedGraph:
         return res
     
 
-    def longest_path(self, node_from, node_to) -> float:
+    def longest_path(self, node_from, node_to, fun_weight) -> float:
         '''Calculate the longest path length between two nodes.
 
         https://www.geeksforgeeks.org/find-longest-path-directed-acyclic-graph/
@@ -98,11 +98,11 @@ class DirectedGraph:
             if dist[node]==min_value: continue
 
             # unnecessary to move on if reaching target node
-            if node == node_to: break
+            if node==node_to: break
 
             # update distances of all adjacent vertices
             for adj_node in self.__adjacency[node]:
-                new_length = dist[node] + adj_node.source.duration
+                new_length = dist[node] + fun_weight(adj_node)
                 if dist[adj_node] < new_length:
                     dist[adj_node] = new_length
         

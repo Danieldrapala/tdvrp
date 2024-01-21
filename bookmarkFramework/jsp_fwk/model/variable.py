@@ -146,7 +146,7 @@ class OperationStep(JobStep, MachineStep):
         if start_time is not None:
             self.__start_time = start_time
 
-        # if dispatched, dertermine start time by the previous operations in both job chain and 
+        # if dispatched, determine start time by the previous operations in both job chain and
         # machine chain. Otherwise, use the default start time
         elif self.pre_machine_op:        
             self.__start_time = max(self.pre_job_op.end_time, self.pre_machine_op.end_time)

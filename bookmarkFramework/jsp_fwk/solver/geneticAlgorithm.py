@@ -46,10 +46,10 @@ class GeneticAlgorithmSolver(JSSolver):
             parent2 = self.tournament_solution(population, self.selection_size)
 
             ux = self.generate_ux_crossover(len(parent1.ops))
-            child1 = self.createChild(problem, parent1.chromosome, parent2.chromosome, ux, 0.15)
-            child2 = self.createChild(problem, parent2.chromosome, parent1.chromosome, ux, 0.15)
-            # child1 = self.crossoverox(problem, parent1.chromosome, parent2.chromosome, 0.15)
-            # child2 = self.crossoverox(problem, parent2.chromosome, parent1.chromosome, 0.15)
+            # child1 = self.createChild(problem, parent1.chromosome, parent2.chromosome, ux, 0.15)
+            # child2 = self.createChild(problem, parent2.chromosome, parent1.chromosome, ux, 0.15)
+            child1 = self.crossoverox(problem, parent1.chromosome, parent2.chromosome, 0.15)
+            child2 = self.crossoverox(problem, parent2.chromosome, parent1.chromosome, 0.15)
                 # add best 2 individuals to next generation if they are not already in the next generation (elitist strategy)
             sorted_individuals = sorted([parent1, parent2, child1[0], child2[0]], key=attrgetter("makespan"))
             added = 0
@@ -76,7 +76,7 @@ class GeneticAlgorithmSolver(JSSolver):
 
         x_values = list(range(len(j_values)))
         # Create a trace for the scatter plot
-        trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=10))
+        trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=2))
 
         # Create a layout for the plot
         layout = go.Layout(title='Scatter Plot of i and j', xaxis=dict(title='Index of j_values'),
@@ -105,7 +105,7 @@ class GeneticAlgorithmSolver(JSSolver):
             child1[pos1], child1[pos2] = child1[pos2], child1[pos1]
         return self.generate_chromosome_solution(problem, child1)
     def crossoverox(self, problem, parent1, parent2, mutation):
-        child1 =  parent1.copy()
+        child1 = parent1.copy()
         ra = random.randrange(2, int(len(parent1)/2))
         pos = random.sample(range(len(parent1)),ra)
         infected_values=[parent2[posx] for posx in pos]
@@ -135,11 +135,10 @@ class GeneticAlgorithmSolver(JSSolver):
         return [random.random() for _ in range(size)]
 
     def generate_chromosome_solution(self, problem, chromosome=None, i=None, gap=None):
-
         solution = JSSolution(problem)
         if chromosome is None:
-            # chromosome = self.generate_random_chromosome(solution)
-            chromosome = self.generate_chromosome_by_tail(solution, i, gap)
+            chromosome = self.generate_random_chromosome(solution)
+            # chromosome = self.generate_chromosome_by_tail(solution, i, gap)
         '''One iteration applying priority dispatching rule.'''
         # move form
         # collect imminent operations in the processing queue

@@ -9,7 +9,7 @@ from jsp_fwk import JSProblem, JSSolver, JSSolution
 from jsp_fwk.common.exception import JSPException
 
 
-class TabuSearchSolver(JSSolver):
+class TabuSearchSolverZabawa(JSSolver):
     '''Tabu Search Solver.'''
 
     def __init__(self, name: str = None, n_iterations: int = 100, num_solutions_to_find: int = 1,
@@ -47,13 +47,13 @@ class TabuSearchSolver(JSSolver):
 
         while not iterations >= self.n_iterations:
             neighborhood = self._generate_neighborhood(seed_solution, problem, self.n_iterations, iterations)
-            sorted_neighborhood = sorted(neighborhood.solutions.items())
+            sorted_neighborhood = sorted(neighborhood.solutions.items(), key=lambda sol: sol.estimated_makespan)
             break_boolean = False
             for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
                 for neighbor in lst:  # sort subset of neighbors with the same makespans
                     if neighbor not in tabu_list:
                         # if new seed solution is not better than current seed solution add it to the tabu list
-                        if neighbor.makespan >= seed_solution.makespan:
+                        if neighbor.estimated_makespan >= seed_solution.estimated_makespan:
                             tabu_list.put(seed_solution)
                             if len(tabu_list) > self.tabu_list_size:
                                 tabu_list.get()
@@ -68,7 +68,7 @@ class TabuSearchSolver(JSSolver):
                 lacking_solution = best_solutions_heap.pop()  # remove the worst best solution from the heap
                 best_solutions_heap.push(seed_solution)  # add the new best solution to the heap
                 print("put to best solutions", iterations, seed_solution.makespan)
-                counter=0
+                counter = 0
                 if seed_solution.makespan <absoluteBest.makespan:
                     absoluteBest = seed_solution
                     problem.update_solution(seed_solution)

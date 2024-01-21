@@ -21,25 +21,59 @@ class SimulatedAnnealingSolver(JSSolver):
         self.temp = temp
         self.n_iterations = n_iterations
 
-
+    # def do_solveA(self, problem: JSProblem):
+    #     solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
+    #     # solution, permutation = self.generate_solution(problem)
+    #     best = solution
+    #     problem.update_solution(best)
+    #     best_permutation = permutation
+    #     curr_permutation = best_permutation
+    #     curr = solution
+    #     for i in range(self.n_iterations):
+    #         # candidate_permutation = self.getNeighbour(curr_permutation)
+    #         candidate_permutation = self.getNeighbourClose(curr_permutation)
+    #         # candidate_permutation = self.getNeighbourTenPercent(curr_permutation)
+    #         candidate = self.generate_solution(problem, candidate_permutation)[0]
+    #         if candidate.makespan < best.makespan:
+    #             best_permutation, best = candidate_permutation, candidate
+    #             problem.update_solution(best)
+    #             print('>%d f(%s) = %.5f' % (i, best, best.makespan))
+    #             # difference between candidate and current point evaluation
+    #         # t = t * min(float(1- (i+1)/self.n_iterations),0.99)
+    #         t = self.temp / (float(i+1))
+    #         # calculate metropolis acceptance criterion
+    #         diff = candidate.makespan - curr.makespan
+    #         print("candidate.makespan", candidate.makespan)
+    #         if diff < 0:
+    #             curr_permutation, curr = candidate_permutation, candidate
+    #         else:
+    #             metropolis = exp(-diff / t)
+    #             if rand() < metropolis:
+    #                 curr_permutation, curr = candidate_permutation, candidate
+    #         # calculate temperature for current epoch
+    #         print("iteracja", i)
+    #         print("temperatura",t)
+    #         if t == 0:
+    #             return [best_permutation, best]
+    #         # check if we should keep the new point
     def do_solve(self, problem: JSProblem):
-        solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
-        # solution, permutation = self.generate_solution(problem)
+        # solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
+        solution, permutation = self.generate_solution(problem)
         best = solution
         problem.update_solution(best)
         best_permutation = permutation
         curr_permutation = best_permutation
         curr_makespan = best.makespan
         # run the algorithm
-        t=self.temp
+        t = self.temp
         # tk = 10e-2
-        tk = 10e-4
+        tk = 0
         j_values=[]
         while t > tk:
-            t = t * 0.8
             for i in range(self.n_iterations):
                 # take a step
                 candidate_permutation = self.getNeighbour(curr_permutation)
+                # candidate_permutation = self.getNeighbourJustGoDeeper(curr_permutation)
                 # candidate_permutation = self.getNeighbourClose(curr_permutation)
                 # evaluate candidate point
                 candidate = self.generate_solution(problem, candidate_permutation)[0]
@@ -47,11 +81,11 @@ class SimulatedAnnealingSolver(JSSolver):
                 # check for new best solution
                 if candidate.makespan < best.makespan:
                     # store new best point
+                    # report progress
+                    # difference between candidate and current point evaluation
                     best_permutation, best = candidate_permutation, candidate
                     problem.update_solution(best)
-                    # report progress
                     print('>%d f(%s) = %.5f' % (i, t, best.makespan))
-                    # difference between candidate and current point evaluation
                 diff = candidate.makespan - curr_makespan
 
                 # calculate temperature for current epoch
@@ -64,54 +98,15 @@ class SimulatedAnnealingSolver(JSSolver):
                     metropolis = exp(-diff / t)
                     if rand() < metropolis:
                         curr_permutation, curr_makespan = candidate_permutation, candidate.makespan
-        #
-        # for i in range(self.n_iterations):
-        #       # take a step
-        #         # candidate_permutation = self.getNeighbour(curr_permutation)
-        #         candidate_permutation = self.getNeighbourClose(curr_permutation)
-        #         # candidate_permutation = self.getNeighbourTenPercent(curr_permutation)
-        #         # evaluate candidate point
-        #         candidate = self.generate_solution(problem, candidate_permutation)[0]
-        #         # check for new best solution
-        #         if candidate.makespan < best.makespan:
-        #             # store new best point
-        #             best_permutation, best = candidate_permutation, candidate
-        #             problem.update_solution(best)
-        #             # report progress
-        #             print('>%d f(%s) = %.5f' % (i, best, best.makespan))
-        #         # difference between candidate and current point evaluation
-
-        #     # t = t * min(float(1- (i+1)/self.n_iterations),0.99)
-        #     t = self.temp / (float(i+1))
-        #     # calculate metropolis acceptance criterion
-        #         diff = candidate.makespan - curr.makespan
-        #         print("candidate.makespan", candidate.makespan)
-        #         if diff < 0:
-        #             curr_permutation, curr = candidate_permutation, candidate
-        #         else:
-        #             metropolis = exp(-diff / t)
-        #             if rand() < metropolis:
-        #                 curr_permutation, curr = candidate_permutation, candidate
-        #     # calculate temperature for current epoch
-        #     print("iteracja", i)
-        #     print("temperatura",t)
-        #     if t == 0:
-        #         return [best_permutation, best]
-        #     # check if we should keep the new point
+            # t = self.temp /float(iterations)
+            # iterations+=1
+            t = 0.99 * t
         print(t)
         x_values = list(range(len(j_values)))
-
-        # Create a trace for the scatter plot
-        trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=10))
-
-        # Create a layout for the plot
+        trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=2))
         layout = go.Layout(title='Scatter Plot of i and j', xaxis=dict(title='Index of j_values'),
                            yaxis=dict(title='j values'))
-
-        # Create a figure with the trace and layout
         fig = go.Figure(data=[trace], layout=layout)
-
-        # Show the plot
         fig.show()
         return [best_permutation, best]
 
@@ -123,6 +118,7 @@ class SimulatedAnnealingSolver(JSSolver):
             pos1, pos2 = random.sample(range(len(permutation)), 2)
             mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
         return mutated_permutation
+
     def getNeighbourClose(self, permutation):
         mutated_permutation = permutation.copy()
         mutated_permutation_sorted = sorted(mutated_permutation)
@@ -148,6 +144,14 @@ class SimulatedAnnealingSolver(JSSolver):
         mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
         return mutated_permutation
 
+    def getNeighbourJustGoDeeper(self, permutation):
+        mutated_permutation = permutation.copy()
+        pos1, pos2 = random.sample(range(len(permutation)), 2)
+        temp_val = mutated_permutation[pos1]
+        mutated_permutation.pop(pos1)
+        mutated_permutation.insert(pos2,temp_val)
+        return mutated_permutation
+
     def generate_solution(self, problem, permutation=None):
         solution = JSSolution(problem)
         if permutation is None:
@@ -160,6 +164,8 @@ class SimulatedAnnealingSolver(JSSolver):
         while head_ops:
             # dispatch operation with the first priority
             op = max(head_ops, key=lambda op: permutation[op.source.id])
+            print(op.source.id)
+            print(permutation[op.source.id])
             solution.dispatch(op)
             # update imminent operations
             pos = head_ops.index(op)
@@ -168,10 +174,11 @@ class SimulatedAnnealingSolver(JSSolver):
                 head_ops = head_ops[0:pos] + head_ops[pos + 1:]
             else:
                 head_ops[pos] = next_job_op
-        return solution,permutation
+            print("size", len(head_ops))
+        return solution, permutation
 
     def generate_random_permutation(self, problem):
         return random.sample(range(0, len(problem.ops)), len(problem.ops))
 
     def generate_initial_solution_permutation(self, solution):
-        return [op.tail/op.source.duration for op in solution.ops]
+        return [op.tail for op in solution.ops]

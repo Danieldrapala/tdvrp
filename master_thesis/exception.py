@@ -1,0 +1,2 @@
+class JSSPException(Exception):
+    pass

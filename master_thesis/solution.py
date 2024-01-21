@@ -1,14 +1,10 @@
 '''Solution of Job-Shop Schedule Problem, especially the sequence of operations
 assigned in each machine, and the deduced start time of each operation accordingly.
 '''
-import random
 from collections import defaultdict
-from typing import List, Type
-
 from matplotlib.container import BarContainer
 from .domain import (Operation, Cloneable)
 from .variable import (JobStep, MachineStep, OperationStep)
-from .. import OperationStep
 from ..common.graph import DirectedGraph
 from .problem import JSProblem
 
@@ -30,7 +26,7 @@ class JSSolution(Cloneable):
         self.__chromosome = chromosome
         # operations in topological order: available for disjunctive graph model only
         self.__sorted_ops = None  # type: list[OperationStep]
-        self.__critical_nodes =None # type: list[OperationStep]
+
     @property
     def ops(self) -> list:
         '''All operation steps in job related order: 
@@ -62,13 +58,6 @@ class JSSolution(Cloneable):
     @property
     def chromosome(self):
         return self.__chromosome
-
-    @property
-    def estimated_makespan(self) -> float:
-        pass
-    @property
-    def critical_nodes(self) -> list[OperationStep]:
-        return self.__critical_nodes
 
     @chromosome.setter
     def chromosome(self, chromosome):
@@ -216,8 +205,8 @@ class JSSolution(Cloneable):
 
         # plot new bars
         for op in self.__ops:
-            gnt_job.barh(op.source.job.id, op.source.duration, left=op.start_time, height=0.5)
-            gnt_machine.barh(op.source.machine.id, op.source.duration, left=op.start_time, height=0.5)
+            gnt_job.barh(op.source.job.id, op.source.time, left=op.start_time, height=0.5)
+            gnt_machine.barh(op.source.machine.id, op.source.time, left=op.start_time, height=0.5)
 
         # reset x-limit
         for axis in axes:
@@ -271,4 +260,3 @@ class JSSolution(Cloneable):
         # except the dummy source and sink nodes
         ops = graph.sort()
         self.__sorted_ops = ops[1:-1] if ops else None
-        self.__

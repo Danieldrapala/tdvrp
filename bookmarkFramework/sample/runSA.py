@@ -19,7 +19,7 @@ if __name__=='__main__':
     # ----------------------------------------
     # create problem from benchmark
     # ----------------------------------------
-    problem = JSProblem(benchmark='abz7')
+    problem = JSProblem(benchmark='ft10')
 
     # ----------------------------------------
     # test built-in solver
@@ -32,7 +32,7 @@ if __name__=='__main__':
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
     # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
-    s = SimulatedAnnealingSolver(n_iterations=250, temp=200)
+    s = SimulatedAnnealingSolver(n_iterations=1, temp=2)
     # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
 
     # pulp solver
