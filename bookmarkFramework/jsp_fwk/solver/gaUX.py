@@ -44,16 +44,11 @@ class GeneticAlgorithmSolver(JSSolver):
             # parent1 = self.random_solution(population)
             # parent2 = self.random_solution(population)
             parent1 = self.tournament_solution(population, self.selection_size)
-            print(parent1.sorted_ops)
             parent2 = self.tournament_solution(population, self.selection_size)
             # #
-            print(parent2.sorted_ops)
-
-            child1 = self.crossoverox(problem, parent1.chromosome, parent2.chromosome, self.mutation_probability)
-            child2 = self.crossoverox(problem, parent2.chromosome, parent1.chromosome, self.mutation_probability)
-            print(child1.sorted_ops)
-            print(child2.sorted_ops)
-
+            ux = self.generate_ux_crossover(len(parent1.ops))
+            child1 = self.createChild(problem, parent1.chromosome, parent2.chromosome, ux, 0.01)
+            child2 = self.createChild(problem, parent2.chromosome, parent1.chromosome, ux, 0.01)
                 # add best 2 individuals to next generation if they are not already in the next generation (elitist strategy)
             sorted_individuals = sorted([parent1, parent2, child1, child2], key=attrgetter("makespan"))
             added = 0
@@ -109,7 +104,6 @@ class GeneticAlgorithmSolver(JSSolver):
             pos2 = random.randrange(len(child1))
             child1[pos1], child1[pos2] = child1[pos2], child1[pos1]
         return self.generate_chromosome_solution(problem, child1)
-
     def crossoverox(self, problem, parent1, parent2, mutation):
         child1 = parent1.copy()
         ra = random.randrange(2, int(len(parent1)))

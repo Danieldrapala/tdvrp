@@ -2,6 +2,7 @@ import logging
 from jsp_fwk import (JSProblem, JSSolution)
 from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver, PriorityDispatchSolver
 from jsp_fwk.solver.geneticAlgorithm import GeneticAlgorithmSolver
+from jsp_fwk.solver.geneticAlgorithmNOWY import GeneticAlgorithmSolverNowy
 from jsp_fwk.solver.simulatedAnealing import SimulatedAnnealingSolver
 from jsp_fwk.solver.tabuSearch import TabuSearchSolver
 
@@ -19,8 +20,13 @@ if __name__=='__main__':
     # ----------------------------------------
     # create problem from benchmark
     # ----------------------------------------
-    problem = JSProblem(benchmark='la05')
+    problem = JSProblem(benchmark='ft10')
 
+###########
+    #GENETYCZNY
+    #MTWR vs RANDOM
+    #CHROMOSOM zwykły vs biased genetic key
+    # tournament vs random selection
     # ----------------------------------------
     # test built-in solver
     # ----------------------------------------
@@ -31,9 +37,7 @@ if __name__=='__main__':
     rules = ['MTWR']
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
-    s = GeneticAlgorithmSolver(mutation_probability=0.15, population_size=100, n_iterations=100000, selection_size= 50)
-    # s = SimulatedAnnealingSolver(n_iterations=500, temp=20)
-    # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
+    s = GeneticAlgorithmSolverNowy(mutation_probability=0.05, population_size=200, n_iterations= 1000, selection_size=150)
 
     # pulp solver
     # s = PuLPSolver(max_time=60)
@@ -41,14 +45,9 @@ if __name__=='__main__':
     # ----------------------------------------
     # solve and result
     # ----------------------------------------
-    s.solve(problem=problem, interval=2000, callback=print_intermediate_solution)
+    s.solve(problem=problem, callback=print_intermediate_solution, interval=2000)
     s.wait()
     print('----------------------------------------')
-
-    logging.info(f'Makespan: {problem.solution.machine_ops}')
-    logging.info(f'Makespan: {problem.solution.job_ops}')
-    logging.info(f'Makespan: {problem.solution.sorted_ops}')
-    logging.info(f'Makespan: {problem.solution.ops}')
 
     if s.status:
         print(f'Problem: {len(problem.jobs)} jobs, {len(problem.machines)} machines')

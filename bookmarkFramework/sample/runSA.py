@@ -3,6 +3,7 @@ from jsp_fwk import (JSProblem, JSSolution)
 from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver, PriorityDispatchSolver
 from jsp_fwk.solver.geneticAlgorithm import GeneticAlgorithmSolver
 from jsp_fwk.solver.simulatedAnealing import SimulatedAnnealingSolver
+from jsp_fwk.solver.simulatedAnealingITEr import SimulatedAnnealingSolverIter
 from jsp_fwk.solver.tabuSearch import TabuSearchSolver
 
 
@@ -19,20 +20,13 @@ if __name__=='__main__':
     # ----------------------------------------
     # create problem from benchmark
     # ----------------------------------------
-    problem = JSProblem(benchmark='ft10')
+    # problem = JSProblem(benchmark='la12')
+    problem = JSProblem(benchmark='la22')
 
-    # ----------------------------------------
-    # test built-in solver
-    # ----------------------------------------
-    # google or-tools
-    # s = GoogleORCPSolver()
 
-    # priority dispatching
-    rules = ['MTWR']
-    # s = PriorityDispatchSolver(rule=rules[-1])
-    #
     # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
-    s = SimulatedAnnealingSolver(n_iterations=1, temp=2)
+    s = SimulatedAnnealingSolver(n_iterations=250, temp=180)
+    # s = SimulatedAnnealingSolverIter(n_iterations=3500, temp=100)
     # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
 
     # pulp solver

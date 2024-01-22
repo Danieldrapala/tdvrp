@@ -3,7 +3,7 @@ from math import exp, floor
 
 from numpy.random import rand
 
-from jsp_fwk import JSSolution, JSProblem, JSSolver
+from jsp_fwk import JSSolution, JSProblem, JSSolver, OperationStep
 from jsp_fwk.solver.dispatching_rule import DisPatchingRules
 import plotly.graph_objs as go
 
@@ -57,8 +57,8 @@ class SimulatedAnnealingSolver(JSSolver):
     #             return [best_permutation, best]
     #         # check if we should keep the new point
     def do_solve(self, problem: JSProblem):
-        # solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
-        solution, permutation = self.generate_solution(problem)
+        solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
+        # solution, permutation = self.generate_solution(problem)
         best = solution
         problem.update_solution(best)
         best_permutation = permutation
@@ -66,17 +66,17 @@ class SimulatedAnnealingSolver(JSSolver):
         curr_makespan = best.makespan
         # run the algorithm
         t = self.temp
-        # tk = 10e-2
-        tk = 0
+        tk = 10e-3
         j_values=[]
         while t > tk:
             for i in range(self.n_iterations):
                 # take a step
-                candidate_permutation = self.getNeighbour(curr_permutation)
+                candidate_permutation = self.getNeighbour(curr_permutation, len(problem.machines), len(problem.jobs))
                 # candidate_permutation = self.getNeighbourJustGoDeeper(curr_permutation)
                 # candidate_permutation = self.getNeighbourClose(curr_permutation)
                 # evaluate candidate point
                 candidate = self.generate_solution(problem, candidate_permutation)[0]
+
                 j_values.append(candidate.makespan)
                 # check for new best solution
                 if candidate.makespan < best.makespan:
@@ -100,7 +100,7 @@ class SimulatedAnnealingSolver(JSSolver):
                         curr_permutation, curr_makespan = candidate_permutation, candidate.makespan
             # t = self.temp /float(iterations)
             # iterations+=1
-            t = 0.99 * t
+            t = 0.5 * t
         print(t)
         x_values = list(range(len(j_values)))
         trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=2))
@@ -138,9 +138,12 @@ class SimulatedAnnealingSolver(JSSolver):
         return mutated_permutation
 
 
-    def getNeighbour(self, permutation):
+    def getNeighbour(self, permutation, machines, jobs):
         mutated_permutation = permutation.copy()
-        pos1, pos2 = random.sample(range(len(permutation)), 2)
+        pos1 = random.randrange(len(permutation))
+        x = random.randrange(jobs)
+        y = int(random.randint(-1,1))
+        pos2 = ((pos1 + x * machines) % (machines * jobs) + y) % (machines * jobs)
         mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
         return mutated_permutation
 
@@ -160,12 +163,12 @@ class SimulatedAnnealingSolver(JSSolver):
         # move form
         # collect imminent operations in the processing queue
         head_ops = solution.imminent_ops
-        # dispatch operation by priority
+
+        orderedList= [(i%problem.jobs, permutation[i]) for i in range(problem.ops)]
         while head_ops:
             # dispatch operation with the first priority
-            op = max(head_ops, key=lambda op: permutation[op.source.id])
-            print(op.source.id)
-            print(permutation[op.source.id])
+            job_id =orderedList.pop(0)[0]
+            op: OperationStep = [op for op in head_ops if op.source.job.id == job_id][0]
             solution.dispatch(op)
             # update imminent operations
             pos = head_ops.index(op)
@@ -174,11 +177,24 @@ class SimulatedAnnealingSolver(JSSolver):
                 head_ops = head_ops[0:pos] + head_ops[pos + 1:]
             else:
                 head_ops[pos] = next_job_op
-            print("size", len(head_ops))
         return solution, permutation
+        # dispatch operation by priority
+        # while head_ops:
+        #     # dispatch operation with the first priority
+        #     op = max(head_ops, key=lambda op: permutation[op.source.id])
+        #     solution.dispatch(op)
+        #     # update imminent operations
+        #     pos = head_ops.index(op)
+        #     next_job_op = op.next_job_op
+        #     if next_job_op is None:
+        #         head_ops = head_ops[0:pos] + head_ops[pos + 1:]
+        #     else:
+        #         head_ops[pos] = next_job_op
+        # return solution, permutation
 
     def generate_random_permutation(self, problem):
         return random.sample(range(0, len(problem.ops)), len(problem.ops))
 
     def generate_initial_solution_permutation(self, solution):
         return [op.tail for op in solution.ops]
+

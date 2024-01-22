@@ -5,6 +5,7 @@ import random
 from collections import defaultdict
 from typing import List, Type
 
+import numpy as np
 from matplotlib.container import BarContainer
 from .domain import (Operation, Cloneable)
 from .variable import (JobStep, MachineStep, OperationStep)
@@ -31,6 +32,51 @@ class JSSolution(Cloneable):
         # operations in topological order: available for disjunctive graph model only
         self.__sorted_ops = None  # type: list[OperationStep]
         self.__critical_nodes =None # type: list[OperationStep]
+
+    def __eq__(self, other_solution):
+        return np.array_equal(self.chromosome, other_solution.chromosome)
+
+    def __ne__(self, other_solution):
+        return not self == other_solution
+
+    def __lt__(self, other_solution):
+        """
+        Returns true if self is "better" than other_solution.
+        Better is defined as having a lower makespan or machine_makespans if the makespans are equal.
+
+        :type other_solution: Solution
+        :param other_solution: solution to compare
+
+        :rtype: bool
+        :returns: true if self is "better" than other_solution
+        """
+        if self.makespan < other_solution.makespan:
+            return True
+        else:
+            return False
+
+    def __le__(self, other_solution):
+        return not self > other_solution
+
+    def __gt__(self, other_solution):
+        """
+        Returns true if self is "worse" than other_solution.
+        Worse is defined as having a greater makespan or machine_makespans if the makespans are equal.
+
+        :type other_solution: Solution
+        :param other_solution: solution to compare
+
+        :rtype: bool
+        :returns: true if self is "worse" than other_solution
+        """
+        if self.makespan > other_solution.makespan:
+            return True
+        else:
+            return False
+
+    def __ge__(self, other_solution):
+        return not self < other_solution
+
     @property
     def ops(self) -> list:
         '''All operation steps in job related order: 
@@ -271,4 +317,24 @@ class JSSolution(Cloneable):
         # except the dummy source and sink nodes
         ops = graph.sort()
         self.__sorted_ops = ops[1:-1] if ops else None
-        self.__
+        # self.computeCriticalPath()
+
+    #  def _forward(self):
+    #     for n in self.sorted_ops:
+    #         S = max([n.next_job_op.C, n.next_machine_op.C], default = 0)
+    #         n.s = S
+    #         n.C = S + n.source.duration
+    #
+    # def _backward(self):
+    #     for n in list(reversed(self.sorted_ops)):
+    #         Cp = min([n.pre_machine_op.SP, n.pre_job_op.SP], default = self.makespan)
+    #         n.Cp= Cp
+    #         n.Sp= Cp-n.source.duration
+    #         self.add_node(n, Sp = Cp - self.node[n]['p'], Cp = Cp)
+    #
+    # def computeCriticalPath(self):
+    #     G = set()
+    #     for n in self.sorted_ops:
+    #         if n.C == n.Cp:
+    #             n.criticalNode=1
+    #     self._criticalPath = self.subgraph(G)

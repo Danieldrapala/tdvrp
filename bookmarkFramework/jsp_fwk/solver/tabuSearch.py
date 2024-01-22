@@ -1,9 +1,7 @@
 import heapq
 import random
-from math import floor
 from queue import Queue
-import time
-import numpy as np
+
 
 from jsp_fwk import JSProblem, JSSolver, JSSolution
 from jsp_fwk.common.exception import JSPException
@@ -67,7 +65,6 @@ class TabuSearchSolver(JSSolver):
             if seed_solution.makespan < best_solutions_heap[0].makespan:
                 lacking_solution = best_solutions_heap.pop()  # remove the worst best solution from the heap
                 best_solutions_heap.push(seed_solution)  # add the new best solution to the heap
-                print("put to best solutions", iterations, seed_solution.makespan)
                 counter=0
                 if seed_solution.makespan <absoluteBest.makespan:
                     absoluteBest = seed_solution
@@ -76,7 +73,6 @@ class TabuSearchSolver(JSSolver):
             # if solution is not being improved after a number of iterations, force a move to a worse one
             counter += 1
             if counter > self.reset_threshold:
-                print("resetowanie", lacking_solution.makespan, seed_solution.makespan, len(sorted_neighborhood), best_solutions_heap[0].makespan)
                 if not lacking_solution.makespan > seed_solution.makespan and len(sorted_neighborhood) > 1:
                     # add the seed solution to the tabu list
                     tabu_list.put(seed_solution)
@@ -84,7 +80,6 @@ class TabuSearchSolver(JSSolver):
                         tabu_list.get()
                     # choose a worse solution from the neighborhood
                     seed_solution = sorted_neighborhood[random.randint(1, int(len(sorted_neighborhood))-1)][1][0]
-                    print("reset", seed_solution.makespan)
                 counter = 0
                 lacking_solution = seed_solution
             iterations += 1
@@ -115,11 +110,21 @@ class TabuSearchSolver(JSSolver):
         mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
         return mutated_permutation
 
+    def getNeighbour(self, permutation, machines, jobs):
+        mutated_permutation = permutation.chromosome
+        pos1 = random.randrange(len(mutated_permutation))
+        x = random.randrange(jobs)
+        y = int(random.randint(-1,1))
+        pos2 = ((pos1 + x * machines) % (machines * jobs) + y) % (machines * jobs)
+        mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
+        return mutated_permutation
+
+
     def _generate_neighborhood(self, solution, problem, iterations, iteration):
         neighborhood = _SolutionSet()
         while neighborhood.size < self.neighborhood_size:
             try:
-                permutation = self.getNeighbour(solution)
+                permutation = self.getNeighbour(solution, len(problem.machines), len(problem.jobs))
                 # permutation = self.getNeighbourTenPercent(solution)
                 neighbor = self.generate_solution(problem, permutation)
                 if neighbor not in neighborhood:
@@ -141,7 +146,7 @@ class TabuSearchSolver(JSSolver):
         solution.chromosome = permutation
         while head_ops:
             # dispatch operation with the first priority
-            op = max(head_ops, key=lambda op: permutation[op.source.id])
+            op = min(head_ops, key=lambda op: permutation[op.source.id])
             solution.dispatch(op)
             # update imminent operations
             pos = head_ops.index(op)
@@ -156,7 +161,7 @@ class TabuSearchSolver(JSSolver):
         return random.sample(range(0, len(problem.ops)), len(problem.ops))
 
     def generate_initial_solution_permutation(self, solution):
-        return [op.tail for op in solution.ops]
+        return [-op.tail for op in solution.ops]
 
 
 '''
