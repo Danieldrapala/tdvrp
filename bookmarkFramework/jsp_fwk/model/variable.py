@@ -17,6 +17,10 @@ class Step(Base):
 
         # the source object
         self.__source = source    
+        self.__C = None
+        self.__Cp = None
+        self.__Sp = None
+        self.__S = None
 
     @property
     def source(self): return self.__source
@@ -28,7 +32,31 @@ class Step(Base):
         '''
         return 0.0
 
+    @property
+    def C(self) -> float: return self.__C
 
+    @property
+    def Sp(self) -> float: return self.__Sp
+    @property
+    def S(self) -> float: return self.__S
+
+    @property
+    def Cp(self) -> float: return self.__Cp
+
+    @Cp.setter
+    def Cp(self, cp):
+        self.__Cp = cp
+
+    @C.setter
+    def C(self, c):
+        self.__C = c
+
+    @Sp.setter
+    def Sp(self, Sp):
+        self.__Sp = Sp
+    @S.setter
+    def S(self, S):
+        self.__S = S
 class JobStep(Step):
     
     def __init__(self, source:Base=None) -> None:

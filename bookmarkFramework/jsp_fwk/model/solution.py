@@ -16,7 +16,7 @@ from .problem import JSProblem
 
 class JSSolution(Cloneable):
 
-    def __init__(self, problem: JSProblem, chromosome: list[float]=None) -> None:
+    def __init__(self, problem: JSProblem, chromosome: list[float]=None, orderedseq: list[tuple]=None) -> None:
         '''Initialize solution by copying all operations from `problem`.
 
         Args:
@@ -32,6 +32,8 @@ class JSSolution(Cloneable):
         # operations in topological order: available for disjunctive graph model only
         self.__sorted_ops = None  # type: list[OperationStep]
         self.__critical_nodes =None # type: list[OperationStep]
+        self.__criticalPath = None
+        self.__orderedseq = orderedseq
 
     def __eq__(self, other_solution):
         return np.array_equal(self.chromosome, other_solution.chromosome)
@@ -89,6 +91,9 @@ class JSSolution(Cloneable):
         return self.__job_ops
 
     @property
+    def criticalPath(self):
+        return self.__criticalPath
+    @property
     def machine_ops(self):
         '''Operation steps grouped by machine: {machine_step: [op0, op5, op8, ...]}.'''
         return self.__machine_ops
@@ -110,6 +115,9 @@ class JSSolution(Cloneable):
         return self.__chromosome
 
     @property
+    def orderedseq(self):
+        return self.__orderedseq
+    @property
     def estimated_makespan(self) -> float:
         pass
     @property
@@ -120,6 +128,12 @@ class JSSolution(Cloneable):
     def chromosome(self, chromosome):
         self.__chromosome = chromosome
 
+    @criticalPath.setter
+    def criticalPath(self, criticalPath):
+        self.__criticalPath = criticalPath
+    @orderedseq.setter
+    def orderedseq(self, orderedseq):
+        self.__orderedseq = orderedseq
     def find(self, source_op: Operation):
         '''Find the associated step with source operation.'''
         for op in self.__ops:
@@ -296,7 +310,6 @@ class JSSolution(Cloneable):
         '''Update the associated directed graph and the topological order accordingly.'''
         # add the dummy source and sink node
         source, sink = OperationStep(), OperationStep()
-
         # identical directed graph
         graph = DirectedGraph()
         for op in self.__ops:
@@ -312,29 +325,38 @@ class JSSolution(Cloneable):
             # machine chain edge
             if op.next_machine_op and op.next_machine_op != op.next_job_op:
                 graph.add_edge(op, op.next_machine_op)
-
         # topological order:
         # except the dummy source and sink nodes
         ops = graph.sort()
         self.__sorted_ops = ops[1:-1] if ops else None
-        # self.computeCriticalPath()
 
-    #  def _forward(self):
-    #     for n in self.sorted_ops:
-    #         S = max([n.next_job_op.C, n.next_machine_op.C], default = 0)
-    #         n.s = S
-    #         n.C = S + n.source.duration
-    #
-    # def _backward(self):
-    #     for n in list(reversed(self.sorted_ops)):
-    #         Cp = min([n.pre_machine_op.SP, n.pre_job_op.SP], default = self.makespan)
-    #         n.Cp= Cp
-    #         n.Sp= Cp-n.source.duration
-    #         self.add_node(n, Sp = Cp - self.node[n]['p'], Cp = Cp)
-    #
-    # def computeCriticalPath(self):
-    #     G = set()
-    #     for n in self.sorted_ops:
-    #         if n.C == n.Cp:
-    #             n.criticalNode=1
-    #     self._criticalPath = self.subgraph(G)
+
+    def forward(self):
+        for n in self.__sorted_ops:
+            li = []
+            if n.pre_machine_op is not None and n.pre_machine_op.C is not None:
+                li.append(n.pre_machine_op.C)
+            if n.pre_job_op is not None and n.pre_job_op.C is not None:
+                li.append(n.pre_job_op.C)
+            S = max(li, default = 0)
+            n.S = S
+            n.C = S + n.source.duration
+
+    def backward(self):
+        for n in list(reversed(self.__sorted_ops)):
+            li = []
+            if n.next_job_op is not None and n.next_job_op.Sp is not None:
+                li.append(n.next_job_op.Sp)
+            if n.next_machine_op is not None and n.next_machine_op.Sp is not None:
+                li.append(n.next_machine_op.Sp)
+            Cp = min(li, default = self.makespan)
+            n.Cp= Cp
+            n.Sp= Cp-n.source.duration
+
+    def computeCriticalPath(self):
+        G = list()
+        for n in self.sorted_ops:
+            if n.C == n.Cp:
+                n.criticalNode=1
+                G.append(n)
+        self.criticalPath = G

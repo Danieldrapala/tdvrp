@@ -1,6 +1,7 @@
 import logging
 from jsp_fwk import (JSProblem, JSSolution)
 from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver, PriorityDispatchSolver
+from jsp_fwk.solver.gaUX import GeneticAlgorithmSolverUX
 from jsp_fwk.solver.geneticAlgorithm import GeneticAlgorithmSolver
 from jsp_fwk.solver.geneticAlgorithmNOWY import GeneticAlgorithmSolverNowy
 from jsp_fwk.solver.simulatedAnealing import SimulatedAnnealingSolver
@@ -37,7 +38,7 @@ if __name__=='__main__':
     rules = ['MTWR']
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
-    s = GeneticAlgorithmSolverNowy(mutation_probability=0.05, population_size=200, n_iterations= 1000, selection_size=150)
+    s = GeneticAlgorithmSolverUX(mutation_probability=0.05, population_size=30, n_iterations= 25000, selection_size=10)
 
     # pulp solver
     # s = PuLPSolver(max_time=60)

@@ -8,7 +8,7 @@ from operator import attrgetter
 from jsp_fwk.solver.dispatching_rule import DisPatchingRules
 
 
-class GeneticAlgorithmSolver(JSSolver):
+class GeneticAlgorithmSolverUX(JSSolver):
     """Simulated Annealing Solver."""
 
     def __init__(self, name: str = None, mutation_probability: float = None,

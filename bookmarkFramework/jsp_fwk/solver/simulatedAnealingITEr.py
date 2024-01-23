@@ -3,7 +3,7 @@ from math import exp, floor
 
 from numpy.random import rand
 
-from jsp_fwk import JSSolution, JSProblem, JSSolver
+from jsp_fwk import JSSolution, JSProblem, JSSolver, OperationStep
 from jsp_fwk.solver.dispatching_rule import DisPatchingRules
 import plotly.graph_objs as go
 
@@ -22,18 +22,18 @@ class SimulatedAnnealingSolverIter(JSSolver):
         self.n_iterations = n_iterations
 
     def do_solve(self, problem: JSProblem):
-        # solution, permutation = self.generate_solution(problem, self.generate_random_permutation(problem))
-        solution, permutation = self.generate_solution(problem)
+        solution, permutation = self.generate_solutionA(problem, self.generate_random_permutation(problem))
+        # solution, permutation = self.generate_solutionA(problem)
         best = solution
         problem.update_solution(best)
         best_permutation = permutation
-        curr_permutation = best_permutation
+        curr_permutation = solution
         curr = solution
         for i in range(self.n_iterations):
-            candidate_permutation = self.getNeighbour(curr_permutation, len(problem.machines), len(problem.jobs))
+            candidate_permutation = self.getNeighbourFromSolutionCriticalPath(solution=curr)
             # candidate_permutation = self.getNeighbourClose(curr_permutation)
             # candidate_permutation = self.getNeighbourTenPercent(curr_permutation)
-            candidate = self.generate_solution(problem, candidate_permutation)[0]
+            candidate = self.generate_solutionA(problem, candidate_permutation)[0]
             if candidate.makespan < best.makespan:
                 best_permutation, best = candidate_permutation, candidate
                 problem.update_solution(best)
@@ -44,11 +44,11 @@ class SimulatedAnnealingSolverIter(JSSolver):
             # calculate metropolis acceptance criterion
             diff = candidate.makespan - curr.makespan
             if diff < 0:
-                curr_permutation, curr = candidate_permutation, candidate
+                curr_permutation, curr = candidate, candidate
             else:
                 metropolis = exp(-diff / t)
                 if rand() < metropolis:
-                    curr_permutation, curr = candidate_permutation, candidate
+                    curr_permutation, curr = candidate, candidate
             # calculate temperature for current epoch
             if t == 0:
                 return [best_permutation, best]
@@ -130,3 +130,86 @@ class SimulatedAnnealingSolverIter(JSSolver):
 
     def neighbour(self, solution: JSSolution):
         ran = random.randrange(0,len(solution.machine_ops))
+
+    def getNeighbourFromSolutionCriticalPath(self, solution):
+            x = random.randrange(len(solution.criticalPath))
+            position = solution.criticalPath[x].source.id
+            job_id = solution.criticalPath[x].source.job.id
+            lower_index_bound = 0
+            lower_index_counter = 0
+            while lower_index_counter == (position % len(solution.machine_ops)) - 1:
+                if solution.orderedseq[lower_index_bound][0] == job_id:
+                    lower_index_counter += 1
+                lower_index_bound += 1
+            actualSelectedXonOrderedSeq = lower_index_bound
+            for i in range(lower_index_bound, len(solution.orderedseq)):
+                if solution.orderedseq[i][0] == job_id:
+                    actualSelectedXonOrderedSeq = i
+            top_index_bound = len(solution.orderedseq)
+            top_index_counter = 0
+            while top_index_counter == len(solution.machine_ops) - position % len(solution.machine_ops) + 1:
+                if solution.orderedseq[top_index_bound][0] == job_id:
+                    top_index_counter += 1
+                top_index_bound -= 1
+            if top_index_bound == len(solution.orderedseq):
+                top_index_bound -= 1
+            placement_index = random.sample(range(lower_index_bound, top_index_bound),top_index_bound - lower_index_bound)
+            counter = 0
+            if len(placement_index) == 0:
+                print("tu")
+                return self.getNeighbourFromSolutionCriticalPath(solution)
+            idx = placement_index[random.randrange(len(placement_index))]
+            while counter < len(placement_index):
+                if actualSelectedXonOrderedSeq == placement_index:
+                    continue
+                op_id = solution.orderedseq[placement_index[counter]][0]
+                for i in range(len(solution.criticalPath)):
+                    if solution.criticalPath[i].source.id == op_id:
+                        idx = placement_index[counter]
+                        break
+                counter += 1
+            temp = solution.orderedseq[actualSelectedXonOrderedSeq]
+            solution.orderedseq[actualSelectedXonOrderedSeq] = solution.orderedseq[idx]
+            solution.orderedseq[idx] = temp
+            return solution.orderedseq
+
+    def generate_solutionA(self, problem, permutation=None, sortedList=None):
+        solution = JSSolution(problem)
+        orderedList = list()
+        if permutation is None and sortedList is None:
+            orderedList = sorted([(op.source.job.id, -op.tail) for op in solution.ops], key=lambda tuple: tuple[1])
+        '''One iteration applying priority dispatching rule.'''
+        # move form
+        # collect imminent operations in the processing queue
+        head_ops = solution.imminent_ops
+        if sortedList is None and len(orderedList) is 0:
+            orderedList = sorted([(i % len(problem.machines), permutation[i]) for i in range(len(problem.ops))],
+                                 key=lambda tuple: tuple[1])
+        elif sortedList is not None and len(orderedList) is 0:
+            for idx, tup in enumerate(sortedList):
+                temp = list(tup)
+                temp[0] = int(temp[0] / len(problem.machines))
+                sortedList[idx] = temp
+            orderedList = sortedList
+        inter = 0
+        while head_ops and inter<len(orderedList):
+            # dispatch operation with the first priority
+            toList = list(orderedList[inter])
+            job_id = toList[0]
+            op: OperationStep = [op for op in head_ops if op.source.job.id == job_id][0]
+            solution.dispatch(op)
+            # update imminent operations
+            pos = head_ops.index(op)
+            next_job_op = op.next_job_op
+            if next_job_op is None:
+                head_ops = head_ops[0:pos] + head_ops[pos + 1:]
+            else:
+                head_ops[pos] = next_job_op
+            toList[0] = job_id * len(problem.machines) + op.source.id % len(problem.machines)
+            orderedList[inter] = tuple(toList)
+            inter += 1
+        solution.forward()
+        solution.backward()
+        solution.computeCriticalPath()
+        solution.orderedseq = orderedList
+        return solution, solution.orderedseq
