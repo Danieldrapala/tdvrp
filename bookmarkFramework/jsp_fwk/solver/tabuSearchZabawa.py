@@ -30,7 +30,7 @@ class TabuSearchSolverZabawa(JSSolver):
 
     def do_solve(self, problem: JSProblem):
 
-        solution = self.generate_solution(problem)
+        solution = self.generate_solution(problem)[0]
         problem.update_solution(solution)
         absoluteBest = solution
         # ts variables
@@ -47,13 +47,13 @@ class TabuSearchSolverZabawa(JSSolver):
 
         while not iterations >= self.n_iterations:
             neighborhood = self._generate_neighborhood(seed_solution, problem, self.n_iterations, iterations)
-            sorted_neighborhood = sorted(neighborhood.solutions.items(), key=lambda sol: sol.estimated_makespan)
+            sorted_neighborhood = sorted(neighborhood.solutions.items())
             break_boolean = False
             for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
                 for neighbor in lst:  # sort subset of neighbors with the same makespans
                     if neighbor not in tabu_list:
                         # if new seed solution is not better than current seed solution add it to the tabu list
-                        if neighbor.estimated_makespan >= seed_solution.estimated_makespan:
+                        if neighbor.makespan >= seed_solution.makespan:
                             tabu_list.put(seed_solution)
                             if len(tabu_list) > self.tabu_list_size:
                                 tabu_list.get()
@@ -109,39 +109,72 @@ class TabuSearchSolverZabawa(JSSolver):
             mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
         return mutated_permutation
 
-    def getNeighbour(self, sol):
-        mutated_permutation = sol.chromosome
-        pos1, pos2 = random.sample(range(len(mutated_permutation)), 2)
-        mutated_permutation[pos1], mutated_permutation[pos2] = mutated_permutation[pos2], mutated_permutation[pos1]
-        return mutated_permutation
-
+    def getNeighbourFromSolution(self, solution):
+        x = random.randrange(len(solution.orderedseq))
+        job_id = int(solution.orderedseq[x][0] / len(solution.machine_ops))
+        lower_index_bound = x - 1
+        while lower_index_bound > 0:
+            if int(solution.orderedseq[lower_index_bound][0] / len(solution.machine_ops)) == job_id:
+                break
+            lower_index_bound -= 1
+        top_index_bound = x + 1
+        while top_index_bound < len(solution.orderedseq):
+            if int(solution.orderedseq[top_index_bound][0] / len(solution.machine_ops)) == job_id:
+                break
+            top_index_bound += 1
+        if top_index_bound == len(solution.orderedseq):
+            top_index_bound -= 1
+        placement_index = x
+        while placement_index == x:
+            placement_index = random.randint(lower_index_bound, top_index_bound)
+        temp = solution.orderedseq[x]
+        solution.orderedseq[x] = solution.orderedseq[placement_index]
+        solution.orderedseq[placement_index] = temp
+        return solution.orderedseq
     def _generate_neighborhood(self, solution, problem, iterations, iteration):
         neighborhood = _SolutionSet()
         while neighborhood.size < self.neighborhood_size:
             try:
-                permutation = self.getNeighbour(solution)
+                sortedList = self.getNeighbourFromSolution(solution)
                 # permutation = self.getNeighbourTenPercent(solution)
-                neighbor = self.generate_solution(problem, permutation)
+                neighbor = self.generate_solution(problem, sortedList=sortedList)[0]
                 if neighbor not in neighborhood:
                     neighborhood.add(neighbor)
             except JSPException:
                 pass
         return neighborhood
 
-    def generate_solution(self, problem, permutation=None):
+
+    def generate_random_permutation(self, problem):
+        return random.sample(range(0, len(problem.ops)), len(problem.ops))
+
+    def generate_initial_solution_permutation(self, solution):
+        return [op.tail for op in solution.ops]
+
+    def generate_solution(self, problem, permutation=None, sortedList=None):
         solution = JSSolution(problem)
-        if permutation is None:
-            # permutation = self.generate_random_permutation(problem)
-            permutation = self.generate_initial_solution_permutation(solution)
+        orderedList = list()
+        if permutation is None and sortedList is None:
+            orderedList = sorted([(op.source.job.id, -op.tail) for op in solution.ops], key=lambda tuple: tuple[1])
         '''One iteration applying priority dispatching rule.'''
         # move form
         # collect imminent operations in the processing queue
         head_ops = solution.imminent_ops
-        # dispatch operation by priority
-        solution.chromosome = permutation
-        while head_ops:
+        if sortedList is None and len(orderedList) is 0:
+            orderedList = sorted([(i % len(problem.machines), permutation[i]) for i in range(len(problem.ops))],
+                                 key=lambda tuple: tuple[1])
+        elif sortedList is not None and len(orderedList) is 0:
+            for idx, tup in enumerate(sortedList):
+                temp = list(tup)
+                temp[0] = int(temp[0] / len(problem.machines))
+                sortedList[idx] = temp
+            orderedList = sortedList
+        inter = 0
+        while head_ops and inter < len(orderedList):
             # dispatch operation with the first priority
-            op = max(head_ops, key=lambda op: permutation[op.source.id])
+            toList = list(orderedList[inter])
+            job_id = toList[0]
+            op: OperationStep = [op for op in head_ops if op.source.job.id == job_id][0]
             solution.dispatch(op)
             # update imminent operations
             pos = head_ops.index(op)
@@ -150,14 +183,14 @@ class TabuSearchSolverZabawa(JSSolver):
                 head_ops = head_ops[0:pos] + head_ops[pos + 1:]
             else:
                 head_ops[pos] = next_job_op
-        return solution
-
-    def generate_random_permutation(self, problem):
-        return random.sample(range(0, len(problem.ops)), len(problem.ops))
-
-    def generate_initial_solution_permutation(self, solution):
-        return [op.tail for op in solution.ops]
-
+            toList[0] = job_id * len(problem.machines) + op.source.id % len(problem.machines)
+            orderedList[inter] = tuple(toList)
+            inter += 1
+        solution.forward()
+        solution.backward()
+        solution.computeCriticalPath()
+        solution.orderedseq = orderedList
+        return solution, solution.orderedseq
 
 '''
 TS data structures
