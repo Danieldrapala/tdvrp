@@ -21,7 +21,7 @@ if __name__=='__main__':
     # ----------------------------------------
     # create problem from benchmark
     # ----------------------------------------
-    problem = JSProblem(benchmark='ft10')
+    problem = JSProblem(benchmark='la04')
 
 ###########
     #GENETYCZNY
@@ -38,15 +38,15 @@ if __name__=='__main__':
     rules = ['MTWR']
     # s = PriorityDispatchSolver(rule=rules[-1])
     #
-    s = GeneticAlgorithmSolverUX(mutation_probability=0.05, population_size=30, n_iterations= 25000, selection_size=10)
+    s = GeneticAlgorithmSolver(mutation_probability=0.05, population_size=50, n_iterations=7000, selection_size=25)
 
     # pulp solver
     # s = PuLPSolver(max_time=60)
-
     # ----------------------------------------
+
     # solve and result
     # ----------------------------------------
-    s.solve(problem=problem, callback=print_intermediate_solution, interval=2000)
+    s.solve(problem=problem, callback=print_intermediate_solution)
     s.wait()
     print('----------------------------------------')
 

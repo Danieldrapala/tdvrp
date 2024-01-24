@@ -4,6 +4,7 @@ from jsp_fwk.solver import PuLPSolver, GoogleORCPSolver, PriorityDispatchSolver
 from jsp_fwk.solver.geneticAlgorithm import GeneticAlgorithmSolver
 from jsp_fwk.solver.simulatedAnealing import SimulatedAnnealingSolver
 from jsp_fwk.solver.simulatedAnealingITEr import SimulatedAnnealingSolverIter
+from jsp_fwk.solver.simulatedAnealingITErRANDOM import SimulatedAnnealingSolverIterRANDOM
 from jsp_fwk.solver.tabuSearch import TabuSearchSolver
 
 
@@ -21,11 +22,11 @@ if __name__=='__main__':
     # create problem from benchmark
     # ----------------------------------------
     # problem = JSProblem(benchmark='la12')
-    problem = JSProblem(benchmark='la34')
+    problem = JSProblem(benchmark='la04')
 
 
     # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
-    s = SimulatedAnnealingSolverIter(n_iterations=100, temp=500)
+    s = SimulatedAnnealingSolverIterRANDOM(n_iterations=4000, temp=200)
     # s = SimulatedAnnealingSolverIter(n_iterations=3500, temp=100)
     # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
 

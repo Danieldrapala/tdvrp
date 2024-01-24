@@ -29,11 +29,11 @@ class GeneticAlgorithmSolver(JSSolver):
     def do_solve(self, problem: JSProblem):
 
         GAP = 3
-        # population = [self.generate_chromosome_solution(solution, self.generate_chromosome_by_tail(solution, i, GAP)) for i in range(self.population_size)]
         population = [self.generate_chromosome_solution(problem,i=i,gap=GAP) for i in range(self.population_size)]
 
         best_solution = min(population, key=attrgetter('makespan'))
         problem.update_solution(best_solution)
+        first = best_solution.makespan
         iterations = 0
         # get static data
         next_population = []
@@ -44,15 +44,10 @@ class GeneticAlgorithmSolver(JSSolver):
             # parent1 = self.random_solution(population)
             # parent2 = self.random_solution(population)
             parent1 = self.tournament_solution(population, self.selection_size)
-            print(parent1.sorted_ops)
             parent2 = self.tournament_solution(population, self.selection_size)
             # #
-            print(parent2.sorted_ops)
-
             child1 = self.crossoverox(problem, parent1.chromosome, parent2.chromosome, self.mutation_probability)
             child2 = self.crossoverox(problem, parent2.chromosome, parent1.chromosome, self.mutation_probability)
-            print(child1.sorted_ops)
-            print(child2.sorted_ops)
 
                 # add best 2 individuals to next generation if they are not already in the next generation (elitist strategy)
             sorted_individuals = sorted([parent1, parent2, child1, child2], key=attrgetter("makespan"))
@@ -65,7 +60,6 @@ class GeneticAlgorithmSolver(JSSolver):
                 index += 1
             # if parent1, parent2, child1, and child2 are all in next_population, add random solutions
             while added < 2:
-                print("ile razy do tego dochodzi")
                 # next_population.append(self.generate_chromosome_solution(problem, i=random.randrange(len(next_population)), gap=GAP))
                 next_population.append(self.generate_chromosome_solution(problem,self.generate_random_chromosome(solsize=problem), i=random.randrange(len(next_population)), gap=GAP))
                 added += 1
@@ -84,7 +78,7 @@ class GeneticAlgorithmSolver(JSSolver):
         trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=2))
 
         # Create a layout for the plot
-        layout = go.Layout(title='Plot of number iterations and makespan output', xaxis=dict(title='Index of j_values'),
+        layout = go.Layout(title='Plot of number iterations{} and makespan output{}'.format(self.n_iterations,first), xaxis=dict(title='Index of j_values'),
                            yaxis=dict(title='j values'))
 
         # Create a figure with the trace and layout
@@ -112,7 +106,7 @@ class GeneticAlgorithmSolver(JSSolver):
 
     def crossoverox(self, problem, parent1, parent2, mutation):
         child1 = parent1.copy()
-        ra = random.randrange(2, int(len(parent1)))
+        ra = random.randrange(2, int(0.3*len(parent1)))
         pos = random.sample(range(len(parent1)),ra)
         infected_values=[parent1[posx] for posx in pos]
         indexes_of_infected_values_parent2 = sorted([parent2.index(infected_value) for infected_value in infected_values])

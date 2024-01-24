@@ -25,7 +25,7 @@ if __name__=='__main__':
 
 
     # s = GeneticAlgorithmSolver(mutation_probability=0.1, population_size=50, n_iterations=1000)
-    s = SimulatedAnnealingSolver(n_iterations=120, temp=50)
+    s = SimulatedAnnealingSolver(n_iterations=10, temp=200)
     # s = SimulatedAnnealingSolverIter(n_iterations=3500, temp=100)
     # s = TabuSearchSolver(n_iterations=1000, num_solutions_to_find=10, tabu_list_size=200, neighborhood_size=8, reset_threshold=200)
 
@@ -35,7 +35,7 @@ if __name__=='__main__':
     # ----------------------------------------
     # solve and result
     # ----------------------------------------
-    s.solve(problem=problem, interval=2000, callback=print_intermediate_solution)
+    s.solve(problem=problem, callback=print_intermediate_solution)
     s.wait()
     print('----------------------------------------')
 

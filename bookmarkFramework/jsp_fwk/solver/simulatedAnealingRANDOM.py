@@ -9,7 +9,7 @@ from jsp_fwk.solver.dispatching_rule import DisPatchingRules
 import plotly.graph_objs as go
 
 
-class SimulatedAnnealingSolver(JSSolver):
+class SimulatedAnnealingSolverRANDOM(JSSolver):
     '''Simulated Annealing Solver.'''
 
     def __init__(self, name :str =None, n_iterations :int =100, temp :int =2000) -> None:
@@ -58,8 +58,8 @@ class SimulatedAnnealingSolver(JSSolver):
     #             return [best_permutation, best]
     #         # check if we should keep the new point
     def do_solve(self, problem: JSProblem):
-        solution, permutation = self.generate_solution(problem)
         # solution, permutation = self.generate_solution(problem)
+        solution, permutation = self.generate_solution(problem, permutation=self.generate_random_permutation(problem))
         best = solution
         firstmakespan= solution.makespan
         problem.update_solution(best)
@@ -69,15 +69,14 @@ class SimulatedAnnealingSolver(JSSolver):
         curr_makespan = best.makespan
         # run the algorithm
         t = self.temp
-        tk = 0.1
+        tk = 10e-3
         j_values=[]
         metropolis = 0
-        diff = 0
         while t > tk:
-            # print(t, curr_makespan, metropolis, -diff, (t))
+            print(t, curr_makespan, metropolis)
             for i in range(self.n_iterations):
                 # take a step
-                candidate_sortedList = self.getNeighbourFromSolutionCriticalPath(solution=curr_candidate)
+                candidate_sortedList = self.getNeighbourFromSolution(solution=curr_candidate)
                 # candidate_permutation = self.getNeighbourJustGoDeeper(curr_permutation)
                 # candidate_permutation = self.getNeighbourClose(curr_permutation)
                 # evaluate candidate point
@@ -97,19 +96,21 @@ class SimulatedAnnealingSolver(JSSolver):
                 # t = self.temp / (float(i+1))
                 # calculate metropolis acceptance criterion
                 # check if we should keep the new point
-                if diff <= 0:
+                if diff < 0:
                     curr_candidate, curr_makespan = candidate, candidate.makespan
-                elif diff > 0:
+                elif diff >= 0:
                     metropolis = exp(-diff /(t))
+                    if i == self.n_iterations-5 and metropolis<0.05:
+                        metropolis = 0.5
                     if rand() < metropolis:
                         curr_candidate,curr_makespan = candidate, candidate.makespan
             # t = self.temp /float(iterations)
             # iterations+=1
-            t = 0.95 * t
+            t = 0.99 * t
         print(t)
         x_values = list(range(len(j_values)))
         trace = go.Scatter(x=x_values, y=j_values, mode='markers', marker=dict(size=2))
-        layout = go.Layout(title='SAMTWR tempstart{}with iterations_{}Firstmakespan{}'.format(self.temp,self.n_iterations, firstmakespan), xaxis=dict(title='Index of j_values'),
+        layout = go.Layout(title='SA for iteration{}tempstart{}_{}'.format(self.n_iterations,self.temp, firstmakespan), xaxis=dict(title='Index of j_values'),
                            yaxis=dict(title='j values'))
         fig = go.Figure(data=[trace], layout=layout)
         fig.show()
